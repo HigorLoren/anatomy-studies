@@ -1,0 +1,37 @@
+html, body, #renderCanvas {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+#renderCanvas { touch-action: none; }
+
+#status {
+  position: absolute;
+  top: 4rem;
+  left: 1rem;
+  right: 1rem;
+  margin: 0;
+  color: #fff;
+  font: 16px system-ui, sans-serif;
+  pointer-events: none;
+}
+
+#model-control {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: #fff;
+  font: 16px system-ui, sans-serif;
+}
+
+#model {
+  margin-left: .5rem;
+  padding: .4rem .6rem;
+  border: 1px solid #586273;
+  border-radius: .3rem;
+  background: #18212e;
+  color: #fff;
+  font: inherit;
+}
