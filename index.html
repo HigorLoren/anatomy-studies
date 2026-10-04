@@ -6,15 +6,7 @@
     <title>Crânio 3D</title>
   </head>
   <body>
-    <label id="model-control">Modelo
-      <select id="model">
-        <option value="overview-colored-skull">Colorido</option>
-        <option value="overview-skull">Sem cores</option>
-        <option value="overview-skull-natural" selected>Osso natural</option>
-      </select>
-    </label>
-    <p id="status" role="status">Carregando modelo 3D…</p>
-    <canvas id="renderCanvas" aria-label="Modelo 3D de um crânio colorido"></canvas>
-    <script type="module" src="/src/main.ts"></script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
