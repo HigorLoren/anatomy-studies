@@ -1,6 +1,6 @@
 import "@babylonjs/loaders/glTF";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
-import { Color4 } from "@babylonjs/core/Maths/math.color";
+import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Engine } from "@babylonjs/core/Engines/engine";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
@@ -34,8 +34,15 @@ const camera = new ArcRotateCamera(
 camera.attachControl(canvas, true);
 const fillLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
 fillLight.intensity = 1.5;
+fillLight.groundColor = new Color3(0.12, 0.12, 0.12);
 const keyLight = new DirectionalLight("key", new Vector3(-0.6, -1, -0.8), scene);
 keyLight.intensity = 0;
+const lowerFillLight = new DirectionalLight(
+  "lowerFill",
+  new Vector3(0.8, 1, 0.5),
+  scene,
+);
+lowerFillLight.intensity = 0.28;
 
 engine.runRenderLoop(() => scene.render());
 window.addEventListener("resize", () => engine.resize());
@@ -121,8 +128,9 @@ async function loadModel() {
       }
       applyNaturalBone(materials, radius);
     }
-    fillLight.intensity = natural ? 0.7 : 1.5;
-    keyLight.intensity = natural ? 1.5 : 0;
+    fillLight.intensity = natural ? 0.8 : 1;
+    keyLight.intensity = natural ? 1.5 : 0.2;
+    lowerFillLight.intensity = natural ? 0.36 : 0.36;
 
     camera.setTarget(center);
     camera.minZ = radius / 100;
