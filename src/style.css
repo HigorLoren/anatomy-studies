@@ -21,6 +21,29 @@ html, body, #app, #renderCanvas {
   pointer-events: none;
 }
 
+#bone-name {
+  position: absolute;
+  top: 4rem;
+  left: 1rem;
+  margin: 0;
+  padding: .4rem .6rem;
+  border-radius: .3rem;
+  background: #18212e;
+  color: #fff;
+  font: 16px system-ui, sans-serif;
+  pointer-events: none;
+}
+
+.bone-side {
+  display: inline-block;
+  margin-left: .5rem;
+  padding: .05rem .35rem;
+  border: 1px solid currentColor;
+  border-radius: .2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 #model-control {
   position: absolute;
   top: 1rem;

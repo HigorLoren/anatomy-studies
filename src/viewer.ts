@@ -19,12 +19,36 @@ const NATURAL_MODEL = "overview-skull-natural";
 const CAMERA_FRAME_PADDING = 1.15;
 
 const materialKey = (name: string) => name.replace(/\.\d+$/, "");
+const BONE_NAMES: Record<string, string> = {
+  "Ethmoid Bone": "Osso Etmoide", "Frontal bone": "Osso Frontal", "Mandible bone": "Osso Mandíbula",
+  "Occipital bone": "Osso Occipital", "Parietal bone": "Osso Parietal", "Sphenoid bone": "Osso Esfenoide",
+  Vomer: "Osso Vômer", "Inferior nasal concha bone": "Osso Concha Nasal Inferior", "Lacrimal bone": "Osso Lacrimal",
+  "Lower canine": "Osso Canino Inferior", "Lower first molar tooth": "Osso Primeiro Molar Inferior",
+  "Lower first premolar": "Osso Primeiro Pré-Molar Inferior", "Lower lateral incisor": "Osso Incisivo Lateral Inferior",
+  "Lower medial incisor": "Osso Incisivo Central Inferior", "Lower second molar tooth": "Osso Segundo Molar Inferior",
+  "Lower second premolar": "Osso Segundo Pré-Molar Inferior", "Maxilla bone": "Osso Maxilar", "Nasal bone": "Osso Nasal",
+  "Palatine bone": "Osso Palatino", "Temporal bone": "Osso Temporal", "Upper canine": "Osso Canino Superior",
+  "Upper first molar tooth": "Osso Primeiro Molar Superior", "Upper first premolar": "Osso Primeiro Pré-Molar Superior",
+  "Upper lateral incisor": "Osso Incisivo Lateral Superior", "Upper medial incisor": "Osso Incisivo Central Superior",
+  "Upper second molar tooth": "Osso Segundo Molar Superior", "Upper second premolar": "Osso Segundo Pré-Molar Superior",
+  "Zygomatic bone": "Osso Zigomático",
+};
+const boneSelection = (materialName: string, meshName: string): BoneSelection => {
+  const key = materialKey(materialName).replace(/[._][lr]$/, "");
+  const side = /(?:[._]l$|\bleft\b)/i.test(meshName) || /[._]l$/i.test(materialName) ? "E" : /(?:[._]r$|\bright\b)/i.test(meshName) || /[._]r$/i.test(materialName) ? "D" : null;
+  return { name: BONE_NAMES[key] ?? key, side };
+};
 type ColorProfile = { albedoColor: Color3; metallic: number; roughness: number };
 
 export type ViewerStatus = "loading" | "ready" | "error";
+export type BoneSelection = { name: string; side: "E" | "D" | null };
 export type Viewer = { load(model: ModelId): void; dispose(): void };
 
-export function createViewer(canvas: HTMLCanvasElement, setStatus: (status: ViewerStatus) => void): Viewer {
+export function createViewer(
+  canvas: HTMLCanvasElement,
+  setStatus: (status: ViewerStatus) => void,
+  onBoneSelect: (bone: BoneSelection | null) => void,
+): Viewer {
   const engine = new Engine(canvas, true, { adaptToDeviceRatio: true, limitDeviceRatio: 2 });
   const scene = new Scene(engine);
   scene.clearColor = SCENE_COLOR;
@@ -70,6 +94,7 @@ export function createViewer(canvas: HTMLCanvasElement, setStatus: (status: View
       mesh.material = selected.original;
       selected.colored.dispose();
       coloredBones.delete(mesh.uniqueId);
+      onBoneSelect(boneSelection(selected.original.name, mesh.name));
       return;
     }
 
@@ -82,6 +107,7 @@ export function createViewer(canvas: HTMLCanvasElement, setStatus: (status: View
     colored.roughness = color.roughness;
     mesh.material = colored;
     coloredBones.set(mesh.uniqueId, { original, colored });
+    onBoneSelect(boneSelection(original.name, mesh.name));
   });
 
   const frameModel = () => {
@@ -101,6 +127,7 @@ export function createViewer(canvas: HTMLCanvasElement, setStatus: (status: View
     async load(model) {
       const requestId = ++loadId;
       natural = false;
+      onBoneSelect(null);
       setStatus("loading");
       try {
         const isNatural = model === NATURAL_MODEL;

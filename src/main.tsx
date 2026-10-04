@@ -1,6 +1,6 @@
 import { render } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { createViewer, type Viewer, type ViewerStatus } from "./viewer";
+import { createViewer, type BoneSelection, type Viewer, type ViewerStatus } from "./viewer";
 import { DEFAULT_MODEL, MODELS, type ModelId } from "./models";
 import "./style.css";
 
@@ -9,9 +9,10 @@ function ViewerPage() {
   const viewer = useRef<Viewer | null>(null);
   const [model, setModel] = useState<ModelId>(DEFAULT_MODEL);
   const [status, setStatus] = useState<ViewerStatus>("loading");
+  const [bone, setBone] = useState<BoneSelection | null>(null);
 
   useEffect(() => {
-    viewer.current = createViewer(canvas.current!, setStatus);
+    viewer.current = createViewer(canvas.current!, setStatus, setBone);
     return () => viewer.current?.dispose();
   }, []);
 
@@ -25,6 +26,9 @@ function ViewerPage() {
       {MODELS.map(({ value, label }) => <option value={value}>{label}</option>)}
     </select></label>
     {message && <p id="status" role={status === "error" ? "alert" : "status"}>{message}</p>}
+    {bone && <p id="bone-name" aria-live="polite" aria-label={`${bone.name}${bone.side ? `, lado ${bone.side === "D" ? "direito" : "esquerdo"}` : ""}`}>
+      {bone.name}{bone.side && <span class="bone-side">{bone.side}</span>}
+    </p>}
     <canvas ref={canvas} id="renderCanvas" aria-label="Modelo 3D de um crânio" />
   </>;
 }
