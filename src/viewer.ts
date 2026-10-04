@@ -26,6 +26,7 @@ export function createViewer(canvas: HTMLCanvasElement, setStatus: (status: View
 
   const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2.2, 2.5, Vector3.Zero(), scene);
   camera.attachControl(canvas, true);
+  camera.useNaturalPinchZoom = true;
   const fillLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
   fillLight.intensity = 1.5;
   fillLight.groundColor = new Color3(0.12, 0.12, 0.12);
