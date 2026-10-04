@@ -1,3 +1,4 @@
-node_modules
-/dist/
-Roteiro Unificado de Aula Prática - Anatomia Humana - Avaliação (P1) - 2026-2.md
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
