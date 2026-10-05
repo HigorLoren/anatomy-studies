@@ -9,9 +9,10 @@ import type { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import type { Node } from "@babylonjs/core/node";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
+import { createVertebraAppearance } from "./vertebraAppearance";
 import { createPaintMaterials } from "./paintMaterials";
 import { createIsolatedBones } from "./isolatedBones";
-import type { ModelId } from "../models";
+import { SPINE_PIECES, type ModelId } from "../models";
 import { materialKey } from "./bones";
 import type { Exercise, ViewerStatus } from "./types";
 
@@ -32,6 +33,7 @@ type Options = {
 export function createModelLoader(options: Options) {
   const { scene, setStatus, setupExercise } = options;
   const paintMaterials = createPaintMaterials(scene);
+  const vertebraAppearance = createVertebraAppearance(scene);
   let replacements = new Map<string, PBRMaterial>();
   let currentNodes: Node[] = [];
   let loadId = 0;
@@ -52,6 +54,7 @@ export function createModelLoader(options: Options) {
 
     try {
       const materials = await paintMaterials.load(model);
+      if (usesBoneTexture(model)) await vertebraAppearance.load();
 
       if (requestId !== loadId) return;
 
@@ -62,6 +65,7 @@ export function createModelLoader(options: Options) {
       }
 
       filterPracticeMeshes(model, imported.meshes);
+      vertebraAppearance.apply(imported.meshes, usesBoneTexture(model));
       const nodes = mirrorRightGroups(imported.transformNodes, [
         ...imported.meshes,
         ...imported.transformNodes,
@@ -73,13 +77,15 @@ export function createModelLoader(options: Options) {
       arrange = model.startsWith("spine-")
         ? createIsolatedBones(imported.meshes.filter((mesh) => !mesh.isDisposed()))
         : undefined;
-      const keys = options.getExercise()?.isolatedBones;
+      const display = model === "spine-pieces"
+        ? { isolatedBones: SPINE_PIECES } : options.getExercise();
+      const keys = display?.isolatedBones;
       if (keys?.length) {
         arrange?.(keys);
         layoutSignature = keys.join("|");
       }
       replacements = materials;
-      configure(options, natural, options.getExercise());
+      configure(options, natural, display);
       setupExercise();
       setStatus("ready");
     } catch (error) {
@@ -92,6 +98,7 @@ export function createModelLoader(options: Options) {
 
   return {
     load,
+    get isolatedCount() { return layoutSignature ? layoutSignature.split("|").length : 0; },
     get naturalMaterials() { return replacements; },
     arrangeExercise(value: Exercise) {
       if (!arrange || !value?.isolatedBones?.length) return;
@@ -104,6 +111,7 @@ export function createModelLoader(options: Options) {
     dispose: () => {
       ++loadId;
       paintMaterials.dispose();
+      vertebraAppearance.dispose();
     },
   };
 }
@@ -187,7 +195,7 @@ function dispose(nodes: Node[]) {
 }
 
 function modelFile(model: ModelId) {
-  if (model === "spine-cervical-practice") return "overview-skeleton";
+  if (model === "spine-pieces" || model === "spine-cervical-practice") return "overview-skeleton";
   if (model === "spine-practice" || model === "thorax-practice") {
     return "pectoral-back-thorax-bones-costal-cart";
   }
@@ -195,7 +203,7 @@ function modelFile(model: ModelId) {
 }
 
 function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {
-  if (model !== "spine-practice" && model !== "spine-cervical-practice") return;
+  if (!model.startsWith("spine-")) return;
   for (const mesh of meshes) {
     const key = materialKey(mesh.material?.name ?? "");
     if (
@@ -227,4 +235,8 @@ async function importPracticeModel(model: ModelId, scene: Scene) {
     dispose([...primary.meshes, ...primary.transformNodes]);
     throw error;
   }
+}
+
+function usesBoneTexture(model: ModelId) {
+  return model === "spine-pieces" || model === "spine-practice" || model === "thorax-practice";
 }

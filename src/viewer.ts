@@ -146,8 +146,8 @@ export function createViewer(
         inertialPanningY: 0,
       });
       camera.setTarget(center.clone());
-      camera.alpha = view === "question" ? Math.PI / 2 : Math.PI / 2.9;
-      camera.beta = (exercise.value?.isolatedBones?.length ?? 0) > 1
+      camera.alpha = view === "question" || loader.isolatedCount > 1 ? Math.PI / 2 : Math.PI / 2.9;
+      camera.beta = loader.isolatedCount > 1
         ? 0.01
         : exercise.value?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
       frameModel();
