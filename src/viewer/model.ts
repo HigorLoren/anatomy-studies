@@ -30,14 +30,13 @@ type Options = {
   keyLight: DirectionalLight;
   scene: Scene;
   setModel: (center: Vector3, radius: number) => void;
-  setNatural: (value: boolean) => void;
   setStatus: (value: ViewerStatus) => void;
   setupExercise: () => void;
   getExercise: () => Exercise;
 };
 
 export function createModelLoader(options: Options) {
-  const { scene, setNatural, setStatus, setupExercise } = options;
+  const { scene, setStatus, setupExercise } = options;
   const palette = new Map<string, ColorProfile>();
   let paletteLoad: Promise<void> | undefined;
   let currentNodes: Node[] = [];
@@ -71,7 +70,6 @@ export function createModelLoader(options: Options) {
 
     arrange = undefined;
     layoutSignature = "";
-    setNatural(false);
     setStatus("loading");
 
     try {
@@ -103,7 +101,6 @@ export function createModelLoader(options: Options) {
         layoutSignature = keys.join("|");
       }
       configure(options, natural, options.getExercise());
-      setNatural(natural);
       setupExercise();
       setStatus("ready");
     } catch (error) {

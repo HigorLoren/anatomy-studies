@@ -58,12 +58,14 @@ export function createExercise(
 
     const color = palette.get(materialKey(mesh.material.name));
 
-    if (!color) return;
-
     const original = mesh.material;
-    const colored = new PBRMaterial(`colored-${mesh.name}`, scene);
+    const colored = original.clone(`colored-${mesh.name}`);
 
-    Object.assign(colored, color);
+    if (color) {
+      Object.assign(colored, color);
+    } else {
+      colored.emissiveColor = new Color3(0.03, 0.25, 0.6);
+    }
     mesh.material = colored;
     selected.set(mesh.uniqueId, { original, colored });
 

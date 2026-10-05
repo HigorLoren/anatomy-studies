@@ -72,7 +72,6 @@ export function createViewer(
 
   let center = Vector3.Zero();
   let radius = 0;
-  let natural = false;
 
   const frameModel = () => {
     if (!radius) return;
@@ -105,9 +104,6 @@ export function createViewer(
       radius = nextRadius;
       camera.setTarget(center.clone());
     },
-    setNatural: (value) => {
-      natural = value;
-    },
     setStatus,
     setupExercise, getExercise: () => exercise.value,
   });
@@ -124,7 +120,6 @@ export function createViewer(
   scene.onPointerObservable.add(({ type, pickInfo }) => {
     if (
       type === PointerEventTypes.POINTERTAP &&
-      (natural || exercise.value?.markers) &&
       pickInfo?.hit &&
       pickInfo.pickedMesh
     )

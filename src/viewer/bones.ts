@@ -2,7 +2,17 @@ import type { BoneSelection } from "./types";
 
 const materialKey = (name: string) => name.replace(/\.\d+$/, "");
 
+// Nomenclatura de docs/catalogo-de-estruturas-anatomicas.md.
 const boneNames: Record<string, string> = {
+  Atlas: "1ª Vértebra Cervical C1 (Atlas)",
+  Axis: "2ª Vértebra Cervical C2 (Áxis)",
+  "Body of sternum": "Corpo do Esterno",
+  sternum: "Manúbrio do Esterno",
+  sacrum: "(Osso Sacro) Vértebras Sacrais",
+  Coccyx: "(Osso Cóccix) Vértebras Coccígeas",
+  clavicle: "Clavícula",
+  Scapula: "Escápula",
+  "Articular cartilage": "Cartilagem costal",
   "Ethmoid Bone": "Osso Etmoide",
   "Frontal bone": "Osso Frontal",
   "Mandible bone": "Osso Mandíbula",
@@ -39,14 +49,31 @@ export function boneSelection(
   materialName: string,
   meshName: string,
 ): BoneSelection {
-  const key = materialKey(materialName).replace(/[._][lr]$/, "");
+  const normalizedMaterial = materialKey(materialName);
+  const key = normalizedMaterial.replace(/[._][lr]$/, "");
+  const normalizedMesh = materialKey(meshName).replace(/\.$/, "");
+  const vertebra = /^Vertebra_([CTL])(\d+)$/.exec(key);
+  const rib = /^(\d+)(?:st|nd|rd|th)_rib$/.exec(key);
+  const regions: Record<string, string> = {
+    C: "Vértebra Cervical Típica",
+    T: "Vértebra Torácica",
+    L: "Vértebra Lombar",
+  };
 
   const side =
-    /(?:[._]l$|\bleft\b)/i.test(meshName) || /[._]l$/i.test(materialName)
+    /(?:[._]l$|\bleft\b)/i.test(normalizedMesh) || /[._]l$/i.test(normalizedMaterial)
       ? "E"
-      : /(?:[._]r$|\bright\b)/i.test(meshName) || /[._]r$/i.test(materialName)
+      : /(?:[._]r$|\bright\b)/i.test(normalizedMesh) || /[._]r$/i.test(normalizedMaterial)
         ? "D"
         : null;
 
-  return { name: boneNames[key] ?? key, side };
+  const name = vertebra
+    ? key === "Vertebra_C7"
+      ? "7ª Vértebra Cervical C7 (Proeminente)"
+      : regions[vertebra[1]]
+    : rib
+      ? `${rib[1]}ª costela`
+      : boneNames[key] ?? key;
+
+  return { name, side };
 }
