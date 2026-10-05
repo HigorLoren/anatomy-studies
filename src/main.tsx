@@ -60,7 +60,9 @@ function App() {
       />
       <main
         class={`grid gap-10 py-8 xl:gap-16 sm:gap-7 ${
-          mode === "intro" || mode === "explore"
+          mode === "explore"
+            ? "pt-6"
+            : mode === "intro"
             ? "pt-6 lg:grid-cols-[1.15fr_1fr]"
             : "mx-auto max-w-3xl sm:pt-3"
         }`}

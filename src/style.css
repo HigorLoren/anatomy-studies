@@ -7,3 +7,21 @@
   --color-accent: #236783;
   --font-sans: "Avenir Next", "Segoe UI", sans-serif;
 }
+
+.viewer-touch-hint {
+  display: none;
+}
+
+.viewer-mouse-hint {
+  display: inline-block;
+}
+
+@media (any-pointer: coarse) {
+  .viewer-touch-hint {
+    display: inline-block;
+  }
+
+  .viewer-mouse-hint {
+    display: none;
+  }
+}

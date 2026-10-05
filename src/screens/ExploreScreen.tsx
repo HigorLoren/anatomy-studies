@@ -1,4 +1,4 @@
-import { MODELS, type ModelId } from "../models";
+import type { ModelId } from "../models";
 import { AtlasViewer } from "../components/organisms/AtlasViewer";
 import type { ViewerStatus } from "../viewer";
 
@@ -36,6 +36,7 @@ export function ExploreScreen({
     <>
       <AtlasViewer
         mode="explore"
+        onModelChange={onModelChange}
         model={model}
         exercise={null}
         answer=""
@@ -45,41 +46,27 @@ export function ExploreScreen({
         onStatus={onStatus}
       />
       <section class="flex items-center">
-        <div class="w-full">
-          <span class="mb-5 block text-sm font-medium text-accent">
-            Exploração livre
-          </span>
-          <h1 class="mb-5 text-[clamp(2rem,3.2vw,3rem)] leading-[1.13] font-medium tracking-[-0.045em]">
-            Cada osso,
-            <br />
-            uma descoberta.
-          </h1>
-          <p class="max-w-lg text-[16px] leading-7 text-muted">
-            {description}
-          </p>
-          <label
-            class="mb-3 block text-sm leading-6 font-medium mt-8"
-            for="model"
-          >
-            Modelo anatômico
-          </label>
-          <select
-            class="font-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-ink"
-            id="model"
-            value={model}
-            onChange={(event) =>
-              onModelChange(event.currentTarget.value as ModelId)
-            }
-          >
-            {MODELS.map((option) => (
-              <option value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <div class="my-8 border-l-2 border-accent pl-5 text-sm leading-7 text-muted">
-            {context}
+        <div class="grid w-full gap-6 lg:grid-cols-[1fr_1.2fr_auto] lg:items-center">
+          <div>
+            <span class="mb-3 block text-sm font-medium text-accent">
+              Exploração livre
+            </span>
+            <h1 class="mb-5 text-[clamp(2rem,3.2vw,3rem)] leading-[1.13] font-medium tracking-[-0.045em]">
+              Cada osso,
+              <br />
+              uma descoberta.
+            </h1>
+          </div>
+          <div>
+            <p class="max-w-lg text-[16px] leading-7 text-muted">
+              {description}
+            </p>
+            <div class="mt-4 border-l-2 border-accent pl-5 text-sm leading-7 text-muted">
+              {context}
+          </div>
           </div>
           <button
-            class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
+            class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
             onClick={onStart}
           >
             Praticar com questões

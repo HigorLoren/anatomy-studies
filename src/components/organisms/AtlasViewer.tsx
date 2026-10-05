@@ -8,6 +8,8 @@ import {
   type ViewerStatus,
 } from "../../viewer";
 import type { ModelId } from "../../models";
+import { useViewerFullscreen } from "./atlas/useViewerFullscreen";
+import { ViewerToolbar } from "./atlas/ViewerToolbar";
 import { BoneLabel } from "./atlas/BoneLabel";
 import { MarkerButtons } from "./atlas/MarkerButtons";
 import { ViewerControls } from "./atlas/ViewerControls";
@@ -16,6 +18,7 @@ import { ViewerLoader } from "./atlas/ViewerLoader";
 type AtlasViewerProps = {
   mode: "explore" | "quiz";
   model: ModelId;
+  onModelChange?: (model: ModelId) => void;
   exercise: Exercise;
   answer: string;
   checked: boolean;
@@ -27,6 +30,7 @@ type AtlasViewerProps = {
 export function AtlasViewer({
   mode,
   model,
+  onModelChange,
   exercise,
   answer,
   checked,
@@ -34,6 +38,7 @@ export function AtlasViewer({
   onNumberSelect,
   onStatus,
 }: AtlasViewerProps) {
+  const { sectionRef, fullscreenButtonRef, fullscreen, toggleFullscreen } = useViewerFullscreen();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const viewerRef = useRef<Viewer | null>(null);
   const [status, setStatus] = useState<ViewerStatus>("loading");
@@ -61,15 +66,18 @@ export function AtlasViewer({
       },
     );
 
-    const fpsTimer = window.setInterval(() => {
-      setFps(viewerRef.current?.fps() ?? null);
-    }, 500);
-
     return () => {
-      window.clearInterval(fpsTimer);
       viewerRef.current?.dispose();
     };
   }, [onStatus]);
+
+  useEffect(() => {
+    if (mode !== "explore") return;
+    const timer = window.setInterval(() => {
+      setFps(viewerRef.current?.fps() ?? null);
+    }, 500);
+    return () => window.clearInterval(timer);
+  }, [mode]);
 
   useEffect(() => viewerRef.current?.load(model), [model]);
 
@@ -88,21 +96,18 @@ export function AtlasViewer({
 
   return (
     <section
-      class={`relative flex flex-col overflow-hidden rounded-3xl bg-[#0a0d14] text-white ${mode === "quiz" ? "my-6 h-85 sm:h-90" : "min-h-120 lg:sticky lg:top-6 lg:h-[min(740px,calc(100dvh-160px))]"}`}
+      ref={sectionRef}
+      role={fullscreen ? "dialog" : undefined}
+      aria-modal={fullscreen ? true : undefined}
+      class={`flex flex-col overflow-hidden bg-[#0a0d14] text-white ${fullscreen ? "fixed inset-0 z-50 h-dvh w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]" : `relative rounded-3xl ${mode === "quiz" ? "my-6 h-85 sm:h-90" : "h-[75dvh] min-h-130 lg:h-[calc(100dvh-160px)] lg:min-h-150"}`}`}
       aria-label={`Visualização: ${modelLabel}`}
     >
-      <div class="pointer-events-none absolute top-7 left-8 z-10 sm:top-5 sm:left-6">
-        <span class="text-xs text-slate-400">Atlas interativo</span>
-        <h2 class="mt-1 text-xl font-normal tracking-tight">{modelLabel}</h2>
-      </div>
-      {status === "ready" && fps !== null && (
-        <span
-          class="pointer-events-none absolute top-5 right-6 z-10 rounded-lg bg-black/35 px-2.5 py-1 font-mono text-xs text-slate-300 tabular-nums"
-          aria-label={`Taxa de quadros: ${fps} FPS`}
-        >
-          {fps} FPS
-        </span>
-      )}
+      <ViewerToolbar
+        explore={mode === "explore"} model={model} modelLabel={modelLabel}
+        onModelChange={onModelChange} fps={status === "ready" ? fps : null}
+        fullscreen={fullscreen} fullscreenButtonRef={fullscreenButtonRef}
+        toggleFullscreen={toggleFullscreen}
+      />
       <div class="relative isolate min-h-0 flex-1 overflow-hidden">
         <canvas
           class="block h-full w-full touch-none outline-none"

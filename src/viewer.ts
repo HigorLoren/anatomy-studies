@@ -111,6 +111,8 @@ export function createViewer(
   const resize = () => { engine.resize(); frameModel(); };
 
   window.addEventListener("resize", resize);
+  const resizeObserver = new ResizeObserver(resize);
+  resizeObserver.observe(canvas);
 
   engine.runRenderLoop(() => {
     scene.render();
@@ -153,6 +155,7 @@ export function createViewer(
       loader.dispose();
       exercise.clear();
       window.removeEventListener("resize", resize);
+      resizeObserver.disconnect();
       engine.dispose();
     },
   };
