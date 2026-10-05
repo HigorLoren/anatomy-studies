@@ -1,68 +1,69 @@
-export function IntroScreen({ onStart }: { onStart: () => void }) {
+import { useState } from "preact/hooks";
+import {
+  CATEGORIES, QUESTION_BANK, QUESTION_KINDS, filterQuestions,
+  type TestConfig,
+} from "../questions";
+
+type Props = { onStart: (config: TestConfig) => void; onBank: () => void };
+
+export function IntroScreen({ onStart, onBank }: Props) {
+  const [category, setCategory] = useState<TestConfig["category"]>("all");
+  const [kind, setKind] = useState<TestConfig["kind"]>("all");
+  const [count, setCount] = useState(20);
+  const available = filterQuestions({ category, kind }).length;
+  const total = Math.min(count, available, 20);
+  const field = "mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-ink";
+
   return (
     <>
       <div class="flex items-center justify-center overflow-hidden rounded-3xl bg-[#0a0d14] p-8">
-        <img
-          class="w-full max-w-110"
-          src={`${import.meta.env.BASE_URL}skull-practice.png`}
-          alt="Crânio humano visto de frente e de lado"
-        />
+        <img class="w-full max-w-110" src={`${import.meta.env.BASE_URL}skull-practice.png`}
+          alt="Crânio humano visto de frente e de lado" />
       </div>
-      <section class="flex items-center">
-        <div class="w-full">
-          <span class="mb-5 block text-sm font-medium text-accent">
-            Prática de anatomia
-          </span>
-          <h1 class="mb-5 text-[clamp(2rem,3.2vw,3rem)] leading-[1.13] font-medium tracking-[-0.045em]">
-            Um novo olhar
-            <br />
-            sobre o crânio.
-          </h1>
-          <p class="max-w-lg text-[16px] leading-7 text-muted">
-            Observe, identifique e descubra o que você já sabe sobre as
-            estruturas da cabeça.
+      <section>
+        <span class="mb-5 block text-sm font-medium text-accent">Prática de anatomia</span>
+        <h1 class="mb-5 text-4xl font-medium tracking-tight">Monte seu teste</h1>
+        <p class="mb-6 text-muted">
+          Escolha a região e a forma de responder. Cada teste tem até 20 questões,
+          sorteadas de um banco com {QUESTION_BANK.length} perguntas.
+        </p>
+        <form class="space-y-5" onSubmit={(event) => {
+          event.preventDefault();
+          if (total) onStart({ category, kind, count: total });
+        }}>
+          <label class="block text-sm font-medium">Região anatômica
+            <select class={field} value={category} onChange={(event) =>
+              setCategory(event.currentTarget.value as TestConfig["category"])}>
+              <option value="all">Todas as regiões</option>
+              {Object.entries(CATEGORIES).map(([value, label]) =>
+                <option value={value}>{label}</option>)}
+            </select>
+          </label>
+          <label class="block text-sm font-medium">Tipo de questão
+            <select class={field} value={kind} onChange={(event) =>
+              setKind(event.currentTarget.value as TestConfig["kind"])}>
+              <option value="all">Teste misto</option>
+              {Object.entries(QUESTION_KINDS).map(([value, label]) =>
+                <option value={value}>{label}</option>)}
+            </select>
+          </label>
+          <label class="block text-sm font-medium">Máximo de questões
+            <select class={field} value={count}
+              onChange={(event) => setCount(Number(event.currentTarget.value))}>
+              {[5, 10, 15, 20].map((value) => <option value={value}>{value}</option>)}
+            </select>
+          </label>
+          <p class="text-sm text-muted" role="status">
+            {available ? `${available} disponíveis · este teste terá ${total} questões.`
+              : "Não há perguntas para essa combinação. Escolha outra região ou tipo."}
           </p>
-          <div class="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3 border-b border-slate-200 py-4 text-sm text-muted">
-            <span>
-              <strong class="mr-1 text-lg font-medium text-ink">5</strong>{" "}
-              questões
-            </span>
-            <span>
-              <strong class="mr-1 text-lg font-medium text-ink">3</strong>{" "}
-              formas de praticar
-            </span>
-            <span>Sem limite de tempo</span>
-          </div>
-          <div class="my-8 space-y-4">
-            <p class="grid grid-cols-[36px_1fr] gap-x-3">
-              <span class="row-span-2 pt-1 text-xl text-accent">01</span>
-              <b class="text-sm font-medium">Identifique no modelo</b>
-              <small class="mt-1 text-sm leading-5 text-muted">
-                Associe estruturas aos pontos numerados.
-              </small>
-            </p>
-            <p class="grid grid-cols-[36px_1fr] gap-x-3">
-              <span class="row-span-2 pt-1 text-xl text-accent">02</span>
-              <b class="text-sm font-medium">Dê nome às estruturas</b>
-              <small class="mt-1 text-sm leading-5 text-muted">
-                Reconheça os ossos destacados em 3D.
-              </small>
-            </p>
-            <p class="grid grid-cols-[36px_1fr] gap-x-3">
-              <span class="row-span-2 pt-1 text-xl text-accent">03</span>
-              <b class="text-sm font-medium">Complete a frase</b>
-              <small class="mt-1 text-sm leading-5 text-muted">
-                Conecte os nomes ao que você aprendeu.
-              </small>
-            </p>
-          </div>
-          <button
-            class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
-            onClick={onStart}
-          >
-            Começar a prática
+          <button disabled={!total} class="rounded-xl bg-ink px-5 py-4 text-white disabled:opacity-45">
+            Começar teste
           </button>
-        </div>
+        </form>
+        <button onClick={onBank} class="mt-5 rounded-xl border border-slate-300 px-5 py-4 text-accent">
+          Prática livre: escolher qualquer questão
+        </button>
       </section>
     </>
   );

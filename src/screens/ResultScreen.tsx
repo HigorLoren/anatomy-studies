@@ -1,7 +1,8 @@
 import { ResultAnswers } from "../components/organisms/ResultAnswers";
-import { QUESTIONS } from "../questions";
+import type { Question } from "../questions";
 
 type ResultScreenProps = {
+  questions: Question[];
   answers: string[];
   score: number;
   onRestart: () => void;
@@ -9,6 +10,7 @@ type ResultScreenProps = {
 };
 
 export function ResultScreen({
+  questions,
   answers,
   score,
   onRestart,
@@ -23,16 +25,16 @@ export function ResultScreen({
         <div class="my-7 flex items-center gap-6">
           <strong class="text-7xl font-medium tracking-tight text-accent">
             {score}
-            <small class="text-3xl text-muted">/{QUESTIONS.length}</small>
+            <small class="text-3xl text-muted">/{questions.length}</small>
           </strong>
           <span class="text-lg text-muted">respostas corretas</span>
         </div>
-        {score === QUESTIONS.length && (
+        {score === questions.length && (
           <p class="max-w-lg text-[16px] font-medium text-accent">
             Você reconheceu todas as estruturas desta prática.
           </p>
         )}
-        <ResultAnswers answers={answers} />
+        <ResultAnswers answers={answers} questions={questions} />
         <div class="flex justify-between mt-6 min-h-14">
           <button
             class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent flex items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
@@ -44,7 +46,7 @@ export function ResultScreen({
             class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-xl px-4 py-3 text-sm text-accent hover:bg-slate-200/60"
             onClick={onExplore}
           >
-            Explorar o crânio livremente
+            Abrir banco de questões
           </button>
         </div>
       </div>

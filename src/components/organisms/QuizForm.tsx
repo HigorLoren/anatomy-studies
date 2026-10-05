@@ -2,10 +2,12 @@ import { AnswerFeedback } from "../molecules/AnswerFeedback";
 import { SelectionFeedback } from "../molecules/SelectionFeedback";
 import { MarkerPicker } from "../molecules/MarkerPicker";
 import { QuestionInput } from "../molecules/QuestionInput";
-import { QUESTIONS, type Question } from "../../questions";
+import { type Question } from "../../questions";
 import type { ViewerStatus } from "../../viewer";
 
 type QuizFormProps = {
+  total: number;
+  free?: boolean;
   answer: string;
   checked: boolean;
   correct: boolean;
@@ -18,6 +20,8 @@ type QuizFormProps = {
 };
 
 export function QuizForm({
+  total,
+  free,
   answer,
   checked,
   correct,
@@ -51,6 +55,7 @@ export function QuizForm({
       >
         {identify ? (
           <MarkerPicker
+            markers={question.markers}
             answer={answer}
             disabled={checked || !viewerReady}
             onSelect={onAnswer}
@@ -83,8 +88,8 @@ export function QuizForm({
           disabled={!canSubmit}
         >
           {checked
-            ? index === QUESTIONS.length - 1
-              ? "Ver resultado"
+            ? index === total - 1
+              ? free ? "Voltar à primeira questão" : "Ver resultado"
               : "Próxima questão"
             : "Conferir resposta"}
         </button>

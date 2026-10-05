@@ -1,12 +1,14 @@
 import { MARKER_BONES } from "../../questions";
 
 type MarkerPickerProps = {
+  markers?: string[];
   answer: string;
   disabled: boolean;
   onSelect: (answer: string) => void;
 };
 
 export function MarkerPicker({
+  markers = MARKER_BONES,
   answer,
   disabled,
   onSelect,
@@ -17,7 +19,7 @@ export function MarkerPicker({
         Selecione um número
       </legend>
       <div class="grid grid-cols-5 gap-3">
-        {MARKER_BONES.map((_, index) => {
+        {markers.map((_, index) => {
           const value = String(index + 1);
           return (
             <button

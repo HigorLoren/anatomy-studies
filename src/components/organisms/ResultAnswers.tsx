@@ -1,9 +1,11 @@
-import { explainAnswer, isCorrect, QUESTIONS } from "../../questions";
+import { explainAnswer, isCorrect, type Question } from "../../questions";
 
-export function ResultAnswers({ answers }: { answers: string[] }) {
+type Props = { answers: string[]; questions: Question[] };
+
+export function ResultAnswers({ answers, questions }: Props) {
   return (
     <div class="mt-6 border-t border-slate-200">
-      {QUESTIONS.map((question, index) => {
+      {questions.map((question, index) => {
         const correct = isCorrect(question, answers[index]);
         return (
           <details class="border-b border-slate-200 py-3 text-[16px]">

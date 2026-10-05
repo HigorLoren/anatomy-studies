@@ -72,6 +72,8 @@ export function AtlasViewer({
     [mode, questionIndex],
   );
 
+  const modelLabel = model.startsWith("spine-") ? "Coluna vertebral" : model === "thorax-practice" ? "Ossos do tórax" : "Crânio humano";
+
   const reset = () => {
     return viewerRef.current?.reset(mode === "quiz" ? "question" : "default");
   };
@@ -79,18 +81,18 @@ export function AtlasViewer({
   return (
     <section
       class={`relative flex flex-col overflow-hidden rounded-3xl bg-[#0a0d14] text-white ${mode === "quiz" ? "my-6 h-85 sm:h-90" : "min-h-120 lg:sticky lg:top-6 lg:h-[min(740px,calc(100dvh-160px))]"}`}
-      aria-label="Visualização do crânio"
+      aria-label={`Visualização: ${modelLabel}`}
     >
       <div class="pointer-events-none absolute top-7 left-8 z-10 sm:top-5 sm:left-6">
         <span class="text-xs text-slate-400">Atlas interativo</span>
-        <h2 class="mt-1 text-xl font-normal tracking-tight">Crânio humano</h2>
+        <h2 class="mt-1 text-xl font-normal tracking-tight">{modelLabel}</h2>
       </div>
       <div class="relative isolate min-h-0 flex-1 overflow-hidden">
         <canvas
           class="block h-full w-full touch-none outline-none"
           ref={canvasRef}
           id="renderCanvas"
-          aria-label="Crânio 3D: arraste para girar e use a rolagem para aproximar"
+          aria-label={`${modelLabel} em 3D: arraste para girar e use a rolagem para aproximar`}
         />
         {status === "ready" && mode === "quiz" && (
           <MarkerButtons

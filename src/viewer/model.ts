@@ -76,7 +76,7 @@ export function createModelLoader(options: Options) {
       if (requestId !== loadId) return;
 
       const imported = await ImportMeshAsync(
-        `${import.meta.env.BASE_URL}${natural ? "overview-skull" : model}.glb`,
+        `${import.meta.env.BASE_URL}${modelFile(model)}.glb`,
         scene,
       );
 
@@ -84,6 +84,7 @@ export function createModelLoader(options: Options) {
         return dispose([...imported.meshes, ...imported.transformNodes]);
       }
 
+      filterPracticeMeshes(model, imported.meshes);
       const nodes = mirrorRightGroups(imported.transformNodes, [
         ...imported.meshes,
         ...imported.transformNodes,
@@ -98,7 +99,7 @@ export function createModelLoader(options: Options) {
       setStatus("ready");
     } catch (error) {
       if (requestId === loadId) {
-        console.error("Falha ao carregar o crânio:", error);
+        console.error("Falha ao carregar o modelo:", error);
         setStatus("error");
       }
     }
@@ -198,5 +199,24 @@ function materials(meshes: Scene["meshes"]) {
 function dispose(nodes: Node[]) {
   for (const node of nodes) {
     if (!node.isDisposed()) node.dispose();
+  }
+}
+
+function modelFile(model: ModelId) {
+  if (model === "spine-cervical-practice") return "overview-skeleton";
+  if (model === "spine-practice" || model === "thorax-practice") {
+    return "pectoral-back-thorax-bones-costal-cart";
+  }
+  return model === NATURAL_MODEL ? "overview-skull" : model;
+}
+
+function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {
+  if (model !== "spine-practice" && model !== "spine-cervical-practice") return;
+  for (const mesh of meshes) {
+    const key = materialKey(mesh.material?.name ?? "");
+    if (
+      mesh.getTotalVertices() > 0 &&
+      !/^(Atlas|Axis|Vertebra_[CTL]\d+|sacrum|Coccyx)$/.test(key)
+    ) mesh.dispose();
   }
 }

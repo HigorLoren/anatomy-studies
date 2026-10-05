@@ -4,5 +4,6 @@ export const MODELS = [
   { value: "overview-skull-natural", label: "Osso natural" },
 ] as const;
 
-export type ModelId = (typeof MODELS)[number]["value"];
+export type ModelId = (typeof MODELS)[number]["value"] | "thorax-practice" | "spine-practice"
+  | "spine-cervical-practice";
 export const DEFAULT_MODEL: ModelId = "overview-skull-natural";

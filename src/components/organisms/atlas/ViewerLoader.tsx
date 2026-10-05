@@ -13,7 +13,7 @@ export function ViewerLoader({ status, onRetry }: ViewerLoaderProps) {
       {status === "loading" ? (
         <>
           <span class="size-6 animate-spin rounded-full border-2 border-slate-600 border-t-white motion-reduce:animate-none" />
-          Preparando o crânio…
+          Preparando o modelo…
         </>
       ) : (
         <>

@@ -23,12 +23,14 @@ npm run dev
 Os arquivos de pesquisa ficam fora de `public/` e não fazem parte do build do site.
 Veja o índice da pesquisa em `research/` para continuar investigações.
 
-## Prática do crânio
+## Banco de questões e testes
 
-A tela inicial oferece uma prática de cinco questões: duas de identificação com pontos no modelo 3D, duas de denominação de ossos destacados e uma de completar a frase. Cada resposta recebe correção e explicação; ao terminar, é possível revisar as respostas e refazer a prática. As respostas escritas aceitam diferenças de acentuação e capitalização.
+O banco contém 23 perguntas categorizadas por região (crânio, tórax e coluna vertebral) e tipo (identificação, denominação e completar a frase). Cada pergunta tem um identificador, respostas aceitas e explicação em `src/questions.ts`.
 
-O banco de perguntas está em `src/questions.ts` e segue o catálogo do projeto. Para esta primeira versão, a denominação usa o destaque no modelo 3D em vez de uma imagem estática. O progresso fica em memória durante a sessão e reinicia ao recarregar a página.
+Na abertura, escolha região, tipo e um máximo de 5, 10, 15 ou 20 questões. O teste sorteia perguntas sem repetição, limitado à quantidade disponível e ao teto de 20. Combinações sem perguntas não permitem iniciar um teste. Progresso, pontuação e revisão usam apenas as perguntas sorteadas. Refazer o teste realiza um novo sorteio com os mesmos filtros.
 
-O estilo usa Tailwind CSS com o plugin oficial do Vite. O modo de exploração mantém as três aparências do crânio e a seleção de ossos no modo natural.
+A prática livre oferece o banco filtrável e permite abrir qualquer pergunta diretamente. Durante a prática livre, o seletor permite ir a qualquer questão, sem precisar responder às anteriores. Esse modo não gera resultado de teste. O progresso fica em memória durante a sessão.
 
-A abertura de Praticar usa uma imagem estática do crânio. O atlas 3D aparece entre o enunciado e as respostas nas questões de identificação e denominação; as questões de completar a frase e os resultados dispensam o modelo. Nas questões de identificação, clicar no osso seleciona seu número, assim como clicar no marcador ou na alternativa.
+As perguntas do tórax e da coluna usam `public/pectoral-back-thorax-bones-costal-cart.glb`. As oito perguntas cervicais (atlas, áxis, C7 e vértebra cervical típica) usam `public/overview-skeleton.glb`, pois essas estruturas não estão presentes no modelo do tórax. Na coluna, apenas os ossos vertebrais são exibidos. O banco cobre atlas, áxis, C7, vértebra cervical típica, torácica, lombar, sacro e cóccix; no tórax, cobre o corpo do esterno. Manúbrio e processo xifoide ainda precisam de alvos separados no modelo para receber perguntas 3D. O banco escrito complementar está em `docs/perguntas-torax-coluna.md`.
+
+As respostas escritas aceitam diferenças de acentuação e capitalização. Nas questões de identificação, clicar no osso seleciona seu número, assim como clicar no marcador ou na alternativa. O modo de exploração mantém as três aparências do crânio e a seleção de ossos no modo natural.
