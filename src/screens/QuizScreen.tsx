@@ -32,13 +32,14 @@ function getExercise(
   checked: boolean,
   correct: boolean,
 ): Exercise {
-  if (question.kind === "name") return { highlight: question.highlight };
+  if (question.kind === "name") return { highlight: question.highlight, isolatedBones: question.isolatedBones };
 
   if (question.kind === "complete") return null;
 
   const markers = question.markers ?? MARKER_BONES;
   return {
     markers,
+    isolatedBones: question.isolatedBones,
     highlight: answer ? markers[Number(answer) - 1] : undefined,
     highlightColor: checked ? (correct ? "green" : "red") : "blue",
     correctHighlight:

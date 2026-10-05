@@ -109,13 +109,10 @@ export function createViewer(
       natural = value;
     },
     setStatus,
-    setupExercise,
+    setupExercise, getExercise: () => exercise.value,
   });
 
-  const resize = () => {
-    engine.resize();
-    frameModel();
-  };
+  const resize = () => { engine.resize(); frameModel(); };
 
   window.addEventListener("resize", resize);
 
@@ -127,7 +124,7 @@ export function createViewer(
   scene.onPointerObservable.add(({ type, pickInfo }) => {
     if (
       type === PointerEventTypes.POINTERTAP &&
-      natural &&
+      (natural || exercise.value?.markers) &&
       pickInfo?.hit &&
       pickInfo.pickedMesh
     )
@@ -136,6 +133,7 @@ export function createViewer(
 
   return {
     exercise(value) {
+      loader.arrangeExercise(value);
       exercise.set(value, setupExercise);
     },
     reset(view = "default") {
@@ -148,12 +146,12 @@ export function createViewer(
       });
       camera.setTarget(center.clone());
       camera.alpha = view === "question" ? Math.PI / 2 : Math.PI / 2.9;
-      camera.beta = Math.PI / 1.8;
+      camera.beta = exercise.value?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
       frameModel();
     },
     load(model) {
       onBoneSelect(null);
-      void loader.load(model, exercise.clear, exercise.value);
+      void loader.load(model, exercise.clear);
     },
     dispose() {
       loader.dispose();

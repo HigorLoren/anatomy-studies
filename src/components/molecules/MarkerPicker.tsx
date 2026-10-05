@@ -18,7 +18,7 @@ export function MarkerPicker({
       <legend class="mb-3 block text-sm leading-6 font-medium">
         Selecione um número
       </legend>
-      <div class="grid grid-cols-5 gap-3">
+      <div class={`grid gap-3 ${markers.length > 5 ? "grid-cols-3 sm:grid-cols-6" : "grid-cols-5"}`}>
         {markers.map((_, index) => {
           const value = String(index + 1);
           return (

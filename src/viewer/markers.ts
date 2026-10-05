@@ -30,6 +30,7 @@ export function createMarkers({
     for (const name of exercise?.markers ?? []) {
       const matches = scene.meshes.filter(
         (item) =>
+          item.isEnabled() &&
           item.material &&
           materialKey(item.material.name).replace(/[._][lr]$/, "") === name &&
           item.getTotalVertices() > 0,

@@ -34,6 +34,7 @@ export type Question = {
   highlight?: string;
   model?: ModelId;
   markers?: string[];
+  isolatedBones?: string[];
   markerNames?: string[];
 };
 
@@ -103,18 +104,19 @@ const spineStructures = [
 
 for (const [index, structure] of spineStructures.entries()) {
   const model: ModelId = index < 4 ? "spine-cervical-practice" : "spine-practice";
-  // Pequenos grupos mantêm os marcadores legíveis ao girar a coluna.
-  const group = spineStructures.slice(
-    structure.key === "Atlas" || structure.key === "Axis" || structure.key === "Vertebra_C7" || structure.key === "Vertebra_C4" ? 0 : 4,
-    structure.key === "Atlas" || structure.key === "Axis" || structure.key === "Vertebra_C7" || structure.key === "Vertebra_C4" ? 4 : 8,
-  );
+  const group = spineStructures.slice(index < 6 ? 0 : 2, index < 6 ? 6 : 8);
+  for (let position = group.length - 1; position > 0; position--) {
+    const other = Math.floor(Math.random() * (position + 1));
+    [group[position], group[other]] = [group[other], group[position]];
+  }
   const number = String(group.indexOf(structure) + 1);
   rawQuestions.push(
     {
       kind: "identify",
       model,
       title: `Qual número indica a estrutura: ${structure.name}?`,
-      instruction: "Gire e aproxime a coluna para localizar a estrutura. Selecione seu número.",
+      instruction: "Compare as peças soltas, gire o modelo e selecione o número da estrutura.",
+      isolatedBones: group.map((item) => item.key),
       markers: group.map((item) => item.key),
       markerNames: group.map((item) => item.name),
       answer: number,
@@ -124,8 +126,9 @@ for (const [index, structure] of spineStructures.entries()) {
     {
       kind: "name",
       model,
-      title: "Como se chama a estrutura destacada na coluna?",
-      instruction: "Observe o destaque azul, gire o modelo e escreva o nome anatômico.",
+      title: "Como se chama esta peça óssea isolada?",
+      instruction: "Examine a peça solta de todos os lados e escreva seu nome anatômico completo.",
+      isolatedBones: [structure.key],
       highlight: structure.key,
       answer: structure.name,
       accepted: [structure.name, ...structure.accepted],
@@ -140,8 +143,8 @@ rawQuestions.push({
   model: "thorax-practice",
   title: "Qual número indica o corpo do esterno?",
   instruction: "Gire o tórax e selecione o ponto correspondente à parte alongada do esterno.",
-  markers: ["Body of sternum", "Vertebra_T7", "Vertebra_L3", "sacrum"],
-  markerNames: ["o corpo do esterno", "a vértebra torácica T7", "a vértebra lombar L3", "o sacro"],
+  markers: ["Body of sternum", "Vertebra_T7", "Vertebra_L3", "sacrum", "1st_rib"],
+  markerNames: ["o corpo do esterno", "a vértebra torácica T7", "a vértebra lombar L3", "o sacro", "a primeira costela"],
   answer: "1",
   accepted: ["1"],
   explanation: "O ponto 1 indica o corpo do esterno, sua porção intermediária e mais longa.",

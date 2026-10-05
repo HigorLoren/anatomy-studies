@@ -88,3 +88,20 @@ test("named cervical vertebrae accept their complete alternative names", () => {
   assert.equal(classifyAnswer(named("Atlas"), "Atlas"), "incomplete");
   assert.equal(classifyAnswer(named("Axis"), "Áxis"), "incomplete");
 });
+
+test("identification has at least five alternatives and preserves its answer after shuffling", () => {
+  for (const [index, question] of QUESTION_BANK.entries()) {
+    if (question.kind !== "identify") continue;
+    const markers = question.markers ?? [
+      "Frontal bone", "Nasal bone", "Zygomatic bone", "Maxilla bone", "Mandible bone",
+    ];
+    assert(markers.length >= 5, question.id);
+    assert.equal(new Set(markers).size, markers.length);
+    if (question.category !== "spine") continue;
+    assert.equal(markers.length, 6);
+    assert.deepEqual(question.isolatedBones, markers);
+    const namedQuestion = QUESTION_BANK[index + 1];
+    assert.equal(markers[Number(question.answer) - 1], namedQuestion.highlight);
+    assert.equal(question.markerNames[Number(question.answer) - 1], namedQuestion.answer);
+  }
+});

@@ -10,6 +10,7 @@ import type { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import type { Node } from "@babylonjs/core/node";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
+import { createIsolatedBones } from "./isolatedBones";
 import { applyNaturalBone } from "./naturalBone";
 import type { ModelId } from "../models";
 import { materialKey } from "./bones";
@@ -33,6 +34,7 @@ type Options = {
   setNatural: (value: boolean) => void;
   setStatus: (value: ViewerStatus) => void;
   setupExercise: () => void;
+  getExercise: () => Exercise;
 };
 
 export function createModelLoader(options: Options) {
@@ -41,6 +43,8 @@ export function createModelLoader(options: Options) {
   let paletteLoad: Promise<void> | undefined;
   let currentNodes: Node[] = [];
   let loadId = 0;
+  let layoutSignature = "";
+  let arrange: ((keys: string[]) => void) | undefined;
 
   const loadPalette = () =>
     (paletteLoad ??= LoadAssetContainerAsync(
@@ -62,11 +66,12 @@ export function createModelLoader(options: Options) {
   const load = async (
     model: ModelId,
     clearSelection: () => void,
-    exercise: Exercise,
   ) => {
     const requestId = ++loadId;
     const natural = model === NATURAL_MODEL;
 
+    arrange = undefined;
+    layoutSignature = "";
     setNatural(false);
     setStatus("loading");
 
@@ -75,10 +80,7 @@ export function createModelLoader(options: Options) {
 
       if (requestId !== loadId) return;
 
-      const imported = await ImportMeshAsync(
-        `${import.meta.env.BASE_URL}${modelFile(model)}.glb`,
-        scene,
-      );
+      const imported = await importPracticeModel(model, scene);
 
       if (requestId !== loadId) {
         return dispose([...imported.meshes, ...imported.transformNodes]);
@@ -93,7 +95,15 @@ export function createModelLoader(options: Options) {
       clearSelection();
       dispose(currentNodes);
       currentNodes = nodes;
-      configure(options, natural, exercise);
+      arrange = model.startsWith("spine-")
+        ? createIsolatedBones(imported.meshes.filter((mesh) => !mesh.isDisposed()))
+        : undefined;
+      const keys = options.getExercise()?.isolatedBones;
+      if (keys?.length) {
+        arrange?.(keys);
+        layoutSignature = keys.join("|");
+      }
+      configure(options, natural, options.getExercise());
       setNatural(natural);
       setupExercise();
       setStatus("ready");
@@ -108,6 +118,14 @@ export function createModelLoader(options: Options) {
   return {
     load,
     palette,
+    arrangeExercise(value: Exercise) {
+      if (!arrange || !value?.isolatedBones?.length) return;
+      const nextSignature = value.isolatedBones.join("|");
+      if (layoutSignature === nextSignature) return;
+      layoutSignature = nextSignature;
+      arrange(value.isolatedBones);
+      configure(options, false, value);
+    },
     dispose: () => {
       ++loadId;
     },
@@ -145,7 +163,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
     setModel,
   } = options;
 
-  const geometry = scene.meshes.filter((mesh) => mesh.getTotalVertices() > 0);
+  const geometry = scene.meshes.filter((mesh) => mesh.getTotalVertices() > 0 && mesh.isEnabled());
 
   if (!geometry.length) {
     throw new Error("O arquivo não contém geometria visível.");
@@ -161,7 +179,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   setModel(min.add(max).scale(0.505), radius);
 
   camera.alpha = exercise ? Math.PI / 2 : Math.PI / 2.9;
-  camera.beta = exercise ? Math.PI / 1.8 : Math.PI / 1.8;
+  camera.beta = exercise?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
   camera.minZ = radius / 100;
   camera.maxZ = radius * 100;
   camera.lowerRadiusLimit = radius * 0.3;
@@ -218,5 +236,29 @@ function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {
       mesh.getTotalVertices() > 0 &&
       !/^(Atlas|Axis|Vertebra_[CTL]\d+|sacrum|Coccyx)$/.test(key)
     ) mesh.dispose();
+  }
+}
+
+async function importPracticeModel(model: ModelId, scene: Scene) {
+  const primary = await ImportMeshAsync(
+    `${import.meta.env.BASE_URL}${modelFile(model)}.glb`, scene,
+  );
+  if (model !== "spine-practice") return primary;
+  try {
+    const cervical = await ImportMeshAsync(
+      `${import.meta.env.BASE_URL}overview-skeleton.glb`, scene,
+    );
+    for (const mesh of cervical.meshes) {
+      const key = materialKey(mesh.material?.name ?? "");
+      if (mesh.getTotalVertices() > 0 && !/^(Atlas|Axis|Vertebra_C[47])$/.test(key)) {
+        mesh.dispose();
+      }
+    }
+    primary.meshes.push(...cervical.meshes.filter((mesh) => !mesh.isDisposed()));
+    primary.transformNodes.push(...cervical.transformNodes);
+    return primary;
+  } catch (error) {
+    dispose([...primary.meshes, ...primary.transformNodes]);
+    throw error;
   }
 }
