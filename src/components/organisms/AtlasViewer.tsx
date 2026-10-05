@@ -44,6 +44,7 @@ export function AtlasViewer({
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [bone, setBone] = useState<BoneSelection | null>(null);
   const [markers, setMarkers] = useState<Marker[]>([]);
+  const [painting, setPainting] = useState(false);
   const [fps, setFps] = useState<number | null>(null);
 
   const selectionRef = useRef({ checked, onNumberSelect });
@@ -79,7 +80,9 @@ export function AtlasViewer({
     return () => window.clearInterval(timer);
   }, [mode]);
 
-  useEffect(() => viewerRef.current?.load(model), [model]);
+  useEffect(() => {
+    setPainting(false); viewerRef.current?.paint(false); viewerRef.current?.load(model);
+  }, [model]);
 
   useEffect(() => viewerRef.current?.exercise(exercise), [exercise]);
 
@@ -91,7 +94,8 @@ export function AtlasViewer({
   const modelLabel = model.startsWith("spine-") ? "Peças da coluna vertebral" : model === "thorax-practice" ? "Ossos do tórax" : model === "exploded-skull" ? "Crânio explodido" : "Crânio humano";
 
   const reset = () => {
-    return viewerRef.current?.reset(mode === "quiz" ? "question" : "default");
+    setPainting(false);
+    viewerRef.current?.reset(mode === "quiz" ? "question" : "default");
   };
 
   return (
@@ -106,7 +110,8 @@ export function AtlasViewer({
         explore={mode === "explore"} model={model} modelLabel={modelLabel}
         onModelChange={onModelChange} fps={status === "ready" ? fps : null}
         fullscreen={fullscreen} fullscreenButtonRef={fullscreenButtonRef}
-        toggleFullscreen={toggleFullscreen}
+        toggleFullscreen={toggleFullscreen} painting={painting}
+        onPaintingChange={(enabled) => { setPainting(enabled); viewerRef.current?.paint(enabled); }}
       />
       <div class="relative isolate min-h-0 flex-1 overflow-hidden">
         <canvas

@@ -6,93 +6,82 @@ import type { Scene } from "@babylonjs/core/scene";
 import { boneSelection, materialKey } from "./bones";
 import type { BoneSelection, Exercise } from "./types";
 
-type ColorProfile = {
-  albedoColor: Color3;
-  metallic: number;
-  roughness: number;
-};
-type Selected = { original: PBRMaterial; colored: PBRMaterial };
-
 export function createExercise(
   scene: Scene,
   onBoneSelect: (bone: BoneSelection | null) => void,
 ) {
-  const selected = new Map<number, Selected>();
+  const painted = new Map<AbstractMesh, { original: PBRMaterial; replacement: PBRMaterial }>();
+  let selectedMesh: AbstractMesh | undefined;
+  let painting = false;
   let value: Exercise = null;
 
-  const clear = () => {
-    for (const mesh of scene.meshes) {
-      const item = selected.get(mesh.uniqueId);
-      if (item) mesh.material = item.original;
-      mesh.renderOutline = false;
-    }
-    for (const { colored } of selected.values()) colored.dispose();
-    selected.clear();
+  const clearSelection = () => {
+    if (selectedMesh) selectedMesh.renderOutline = false;
+    selectedMesh = undefined;
+    onBoneSelect(null);
   };
-
+  const clear = () => {
+    clearSelection();
+    for (const [mesh, item] of painted) {
+      if (!mesh.isDisposed()) mesh.material = item.original;
+      item.replacement.dispose();
+    }
+    painted.clear();
+    for (const mesh of scene.meshes) mesh.renderOutline = false;
+  };
   const choose = (
     mesh: AbstractMesh,
-    palette: Map<string, ColorProfile>,
+    materials: Map<string, PBRMaterial>,
     onNumberSelect: (number: number) => void,
   ) => {
     if (!(mesh.material instanceof PBRMaterial)) return;
-
     if (value) {
-      const index =
-        value.markers?.indexOf(
-          materialKey(mesh.material.name).replace(/[._][lr]$/, ""),
-        ) ?? -1;
-
+      const key = materialKey(mesh.material.name).replace(/[._][lr]$/, "");
+      const index = value.markers?.indexOf(key) ?? -1;
       if (index >= 0) onNumberSelect(index + 1);
-
       return;
     }
-
-    const item = selected.get(mesh.uniqueId);
-
-    if (item) {
-      mesh.material = item.original;
-      mesh.renderOutline = false;
-      item.colored.dispose();
-      selected.delete(mesh.uniqueId);
-      onBoneSelect(null);
-      return;
-    }
-
-    const color = palette.get(materialKey(mesh.material.name));
-
-    const original = mesh.material;
-    const colored = original.clone(`colored-${mesh.name}`);
-
-    if (color) {
-      Object.assign(colored, color);
-    } else {
-      colored.emissiveColor = new Color3(0.03, 0.25, 0.6);
-    }
-    mesh.material = colored;
+    const wasSelected = selectedMesh === mesh;
+    clearSelection();
+    if (painting) togglePaint(mesh, materials, painted);
+    if (wasSelected && !painting) return;
+    selectedMesh = mesh;
     outline(mesh, new Color3(0.03, 0.25, 0.6));
-    selected.set(mesh.uniqueId, { original, colored });
-
-    onBoneSelect(boneSelection(original.name, mesh.name));
+    onBoneSelect(boneSelection(mesh.material!.name, mesh.name));
   };
-
-  const set = (next: Exercise, configureMarkers: () => void) => {
-    clear();
-    value = next;
-    onBoneSelect(null);
-    configureMarkers();
-    highlight(scene, value);
-  };
-
   return {
-    choose,
-    clear,
-    get value() {
-      return value;
+    choose, clear,
+    paint(enabled: boolean) { painting = enabled; clearSelection(); },
+    get value() { return value; },
+    set(next: Exercise, configureMarkers: () => void) {
+      clear();
+      value = next;
+      configureMarkers();
+      highlight(scene, value);
     },
-    set,
     highlight: () => highlight(scene, value),
   };
+}
+
+function togglePaint(
+  mesh: AbstractMesh,
+  materials: Map<string, PBRMaterial>,
+  painted: Map<AbstractMesh, { original: PBRMaterial; replacement: PBRMaterial }>,
+) {
+  const existing = painted.get(mesh);
+  if (existing) {
+    mesh.material = existing.original;
+    existing.replacement.dispose();
+    painted.delete(mesh);
+    return;
+  }
+  if (!(mesh.material instanceof PBRMaterial)) return;
+  const original = mesh.material;
+  const template = materials.get(materialKey(original.name));
+  const replacement = (template ?? original).clone(original.name);
+  if (!template) replacement.emissiveColor = new Color3(0.03, 0.25, 0.6);
+  mesh.material = replacement;
+  painted.set(mesh, { original, replacement });
 }
 
 function highlight(scene: Scene, exercise: Exercise) {

@@ -13,7 +13,7 @@ export function useViewerFullscreen() {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") setFullscreen(false);
       if (event.key === "Tab") {
-        const controls = Array.from(sectionRef.current?.querySelectorAll<HTMLElement>("button, select") ?? []);
+        const controls = Array.from(sectionRef.current?.querySelectorAll<HTMLElement>("button, select, input") ?? []);
         const first = controls[0];
         const last = controls[controls.length - 1];
         if (event.shiftKey && document.activeElement === first) {

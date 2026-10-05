@@ -3,6 +3,8 @@ import { MODELS, type ModelId } from "../../../models";
 
 type Props = {
   explore: boolean;
+  painting: boolean;
+  onPaintingChange: (enabled: boolean) => void;
   model: ModelId;
   modelLabel: string;
   onModelChange?: (model: ModelId) => void;
@@ -14,7 +16,7 @@ type Props = {
 
 export function ViewerToolbar({
   explore, model, modelLabel, onModelChange, fps,
-  fullscreen, fullscreenButtonRef, toggleFullscreen,
+  fullscreen, fullscreenButtonRef, toggleFullscreen, painting, onPaintingChange,
 }: Props) {
   return (
       <div class={explore
@@ -40,6 +42,13 @@ export function ViewerToolbar({
                 {MODELS.map((option) => <option value={option.value}>{option.label}</option>)}
               </select>
             </div>
+          )}
+          {explore && (
+            <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-white/20 px-3 text-sm">
+              <input type="checkbox" checked={painting}
+                onChange={(event) => onPaintingChange(event.currentTarget.checked)} />
+              Pintar
+            </label>
           )}
           <button
               ref={fullscreenButtonRef}

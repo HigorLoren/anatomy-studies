@@ -127,16 +127,17 @@ export function createViewer(
       pickInfo?.hit &&
       pickInfo.pickedMesh
     )
-      exercise.choose(pickInfo.pickedMesh, loader.palette, onNumberSelect);
+      exercise.choose(pickInfo.pickedMesh, loader.naturalMaterials, onNumberSelect);
   });
 
   return {
-    fps: () => Math.round(engine.getFps()),
+    fps: () => Math.round(engine.getFps()), paint: exercise.paint,
     exercise(value) {
       loader.arrangeExercise(value);
       exercise.set(value, setupExercise);
     },
     reset(view = "default") {
+      if (!exercise.value) { exercise.clear(); exercise.paint(false); }
       Object.assign(camera, {
         inertialAlphaOffset: 0,
         inertialBetaOffset: 0,
@@ -152,8 +153,7 @@ export function createViewer(
       frameModel();
     },
     load(model) {
-      onBoneSelect(null);
-      void loader.load(model, exercise.clear);
+      onBoneSelect(null); void loader.load(model, exercise.clear);
     },
     dispose() {
       loader.dispose();

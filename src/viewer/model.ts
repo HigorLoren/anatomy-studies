@@ -2,7 +2,6 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import {
   ImportMeshAsync,
-  LoadAssetContainerAsync,
 } from "@babylonjs/core/Loading/sceneLoader";
 import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
@@ -10,18 +9,13 @@ import type { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import type { Node } from "@babylonjs/core/node";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
+import { createPaintMaterials } from "./paintMaterials";
 import { createIsolatedBones } from "./isolatedBones";
 import type { ModelId } from "../models";
 import { materialKey } from "./bones";
 import type { Exercise, ViewerStatus } from "./types";
 
 const NATURAL_MODEL = "overview-skull-natural";
-
-type ColorProfile = {
-  albedoColor: PBRMaterial["albedoColor"];
-  metallic: number;
-  roughness: number;
-};
 
 type Options = {
   camera: ArcRotateCamera;
@@ -37,29 +31,12 @@ type Options = {
 
 export function createModelLoader(options: Options) {
   const { scene, setStatus, setupExercise } = options;
-  const palette = new Map<string, ColorProfile>();
-  let paletteLoad: Promise<void> | undefined;
+  const paintMaterials = createPaintMaterials(scene);
+  let replacements = new Map<string, PBRMaterial>();
   let currentNodes: Node[] = [];
   let loadId = 0;
   let layoutSignature = "";
   let arrange: ((keys: string[]) => void) | undefined;
-
-  const loadPalette = () =>
-    (paletteLoad ??= LoadAssetContainerAsync(
-      `${import.meta.env.BASE_URL}overview-colored-skull.glb`,
-      scene,
-    ).then((container) => {
-      for (const material of container.materials) {
-        if (material instanceof PBRMaterial) {
-          palette.set(materialKey(material.name), {
-            albedoColor: material.albedoColor.clone(),
-            metallic: material.metallic ?? 0,
-            roughness: material.roughness ?? 1,
-          });
-        }
-      }
-      container.dispose();
-    }));
 
   const load = async (
     model: ModelId,
@@ -67,13 +44,14 @@ export function createModelLoader(options: Options) {
   ) => {
     const requestId = ++loadId;
     const natural = model === NATURAL_MODEL;
+    replacements = new Map();
 
     arrange = undefined;
     layoutSignature = "";
     setStatus("loading");
 
     try {
-      if (natural) await loadPalette();
+      const materials = await paintMaterials.load(model);
 
       if (requestId !== loadId) return;
 
@@ -100,6 +78,7 @@ export function createModelLoader(options: Options) {
         arrange?.(keys);
         layoutSignature = keys.join("|");
       }
+      replacements = materials;
       configure(options, natural, options.getExercise());
       setupExercise();
       setStatus("ready");
@@ -113,7 +92,7 @@ export function createModelLoader(options: Options) {
 
   return {
     load,
-    palette,
+    get naturalMaterials() { return replacements; },
     arrangeExercise(value: Exercise) {
       if (!arrange || !value?.isolatedBones?.length) return;
       const nextSignature = value.isolatedBones.join("|");
@@ -124,6 +103,7 @@ export function createModelLoader(options: Options) {
     },
     dispose: () => {
       ++loadId;
+      paintMaterials.dispose();
     },
   };
 }
