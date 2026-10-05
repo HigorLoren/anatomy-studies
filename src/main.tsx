@@ -2,7 +2,10 @@ import { render } from "preact";
 import { useState } from "preact/hooks";
 import type { ViewerStatus } from "./viewer";
 import { AtlasViewer } from "./components/organisms/AtlasViewer";
-import { DEFAULT_MODEL, MODELS, type ModelId } from "./models";
+import { AppHeader } from "./components/molecules/AppHeader";
+import { ExploreScreen } from "./screens/ExploreScreen";
+import { IntroScreen } from "./screens/IntroScreen";
+import { DEFAULT_MODEL, type ModelId } from "./models";
 import { QUESTIONS, MARKER_BONES, isCorrect, explainAnswer } from "./questions";
 import "./style.css";
 
@@ -51,130 +54,30 @@ function App() {
 
   return (
     <div class="mx-auto max-w-[1600px] px-6 md:px-12">
-      <header class="grid grid-cols-2 md:grid-cols-3 min-h-20 items-center gap-4 border-b border-slate-200 flex-wrap justify-center py-4">
-        <a
-          class="focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent flex items-center gap-3 text-2xl font-semibold tracking-tight text-ink no-underline"
-          href="./"
-          aria-label="Anatomia, início"
-        >
-          <span class="flex size-9 items-center justify-center rounded-full bg-ink text-[28px] font-light text-white">
-            a
-          </span>
-          anatomia
-          <span class="ml-4 hidden border-l border-slate-300 pl-5 text-xs font-normal tracking-normal text-muted xl:block">
-            Estudo em perspectiva
-          </span>
-        </a>
-        <nav
-          class="mx-auto flex gap-1 rounded-full bg-slate-200/50 p-1"
-          aria-label="Modo de estudo"
-        >
-          <button
-            class={`font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-full px-4 py-2 text-sm sm:px-3 sm:text-xs ${mode !== "explore" ? "bg-white font-medium text-ink shadow-sm" : "text-muted"}`}
-            onClick={() =>
-              setMode(
-                answers.length === QUESTIONS.length
-                  ? "result"
-                  : answers.length
-                    ? "quiz"
-                    : "intro",
-              )
-            }
-          >
-            Praticar
-          </button>
-          <button
-            class={`font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-full px-4 py-2 text-sm sm:px-3 sm:text-xs ${mode === "explore" ? "bg-white font-medium text-ink shadow-sm" : "text-muted"}`}
-            onClick={() => setMode("explore")}
-          >
-            Explorar em 3D
-          </button>
-        </nav>
-      </header>
+      <AppHeader
+        isExplore={mode === "explore"}
+        onPractice={() =>
+          setMode(
+            answers.length === QUESTIONS.length ? "result" : answers.length ? "quiz" : "intro",
+          )
+        }
+        onExplore={() => setMode("explore")}
+      />
       <main
         class={`grid gap-10 py-8 xl:gap-16 sm:gap-7 ${mode === "quiz" || mode === "result" ? "mx-auto max-w-3xl sm:pt-3" : "pt-6 lg:grid-cols-[1.15fr_1fr]"}`}
       >
-        {mode === "intro" && (
-          <div class="flex items-center justify-center overflow-hidden rounded-3xl bg-[#0a0d14] p-8">
-            <img
-              class="w-full max-w-110"
-              src={`${import.meta.env.BASE_URL}skull-practice.png`}
-              alt="Crânio humano visto de frente e de lado"
-            />
-          </div>
-        )}
+        {mode === "intro" && <IntroScreen onStart={start} />}
         {mode === "explore" && (
-          <AtlasViewer
-            mode="explore"
+          <ExploreScreen
             model={model}
-            exercise={null}
-            answer=""
-            checked={false}
             questionIndex={index}
-            onNumberSelect={setAnswer}
+            onModelChange={setModel}
+            onStart={start}
             onStatus={setStatus}
           />
         )}
-        <section class="flex items-center">
-          {mode === "intro" && (
-            <div class="w-full">
-              <span class="mb-5 block text-sm font-medium text-accent">
-                Prática de anatomia
-              </span>
-              <h1 class="mb-5 text-[clamp(2rem,3.2vw,3rem)] leading-[1.13] font-medium tracking-[-0.045em]">
-                Um novo olhar
-                <br />
-                sobre o crânio.
-              </h1>
-              <p class="max-w-lg text-[16px] leading-7 text-muted">
-                Observe, identifique e descubra o que você já sabe sobre as
-                estruturas da cabeça.
-              </p>
-              <div class="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3 border-b border-slate-200 py-4 text-sm text-muted">
-                <span>
-                  <strong class="mr-1 text-lg font-medium text-ink">5</strong>
-                  questões
-                </span>
-                <span>
-                  <strong class="mr-1 text-lg font-medium text-ink">3</strong>
-                  formas de praticar
-                </span>
-                <span>
-                  <strong class="mr-1 text-lg font-medium text-ink"></strong>Sem
-                  limite de tempo
-                </span>
-              </div>
-              <div class="my-8 space-y-4">
-                <p class="grid grid-cols-[36px_1fr] gap-x-3">
-                  <span class="row-span-2 pt-1 text-xl text-accent">01</span>
-                  <b class="text-sm font-medium">Identifique no modelo</b>
-                  <small class="mt-1 text-sm leading-5 text-muted">
-                    Associe estruturas aos pontos numerados.
-                  </small>
-                </p>
-                <p class="grid grid-cols-[36px_1fr] gap-x-3">
-                  <span class="row-span-2 pt-1 text-xl text-accent">02</span>
-                  <b class="text-sm font-medium">Dê nome às estruturas</b>
-                  <small class="mt-1 text-sm leading-5 text-muted">
-                    Reconheça os ossos destacados em 3D.
-                  </small>
-                </p>
-                <p class="grid grid-cols-[36px_1fr] gap-x-3">
-                  <span class="row-span-2 pt-1 text-xl text-accent">03</span>
-                  <b class="text-sm font-medium">Complete a frase</b>
-                  <small class="mt-1 text-sm leading-5 text-muted">
-                    Conecte os nomes ao que você aprendeu.
-                  </small>
-                </p>
-              </div>
-              <button
-                class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
-                onClick={start}
-              >
-                Começar a prática
-              </button>
-            </div>
-          )}
+        {(mode === "quiz" || mode === "result") && (
+          <section class="flex items-center">
           {mode === "quiz" && (
             <div class="w-full">
               <div class="flex justify-between gap-4 text-xs text-muted">
@@ -426,52 +329,8 @@ function App() {
               </div>
             </div>
           )}
-          {mode === "explore" && (
-            <div class="w-full">
-              <span class="mb-5 block text-sm font-medium text-accent">
-                Exploração livre
-              </span>
-              <h1 class="mb-5 text-[clamp(2rem,3.2vw,3rem)] leading-[1.13] font-medium tracking-[-0.045em]">
-                Cada osso,
-                <br />
-                uma descoberta.
-              </h1>
-              <p class="max-w-lg text-[16px] leading-7 text-muted">
-                Gire o crânio para observar suas estruturas. No modo osso
-                natural, toque em um osso para revelar sua cor e seu nome.
-              </p>
-              <label
-                class="mb-3 block text-sm leading-6 font-medium mt-8"
-                for="model"
-              >
-                Aparência do modelo
-              </label>
-              <select
-                class="font-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-ink"
-                id="model"
-                value={model}
-                onChange={(event) =>
-                  setModel(event.currentTarget.value as ModelId)
-                }
-              >
-                {MODELS.map((option) => (
-                  <option value={option.value}>{option.label}</option>
-                ))}
-              </select>
-              <div class="my-8 border-l-2 border-accent pl-5 text-sm leading-7 text-muted">
-                O crânio reúne estruturas do neurocrânio e do viscerocrânio. A
-                prática usa os nomes do catálogo de estruturas anatômicas do
-                projeto.
-              </div>
-              <button
-                class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
-                onClick={start}
-              >
-                Praticar com questões
-              </button>
-            </div>
-          )}
-        </section>
+          </section>
+        )}
       </main>
     </div>
   );
