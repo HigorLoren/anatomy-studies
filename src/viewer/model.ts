@@ -11,7 +11,6 @@ import type { Node } from "@babylonjs/core/node";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
 import { createIsolatedBones } from "./isolatedBones";
-import { applyNaturalBone } from "./naturalBone";
 import type { ModelId } from "../models";
 import { materialKey } from "./bones";
 import type { Exercise, ViewerStatus } from "./types";
@@ -171,8 +170,6 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   const [min, max] = bounds(geometry);
   const radius = max.subtract(min).length() / 2;
 
-  if (natural) applyNaturalBone(materials(geometry), radius);
-
   fill.intensity = natural ? 0.8 : 1;
   key.intensity = natural ? 1.5 : 0.2;
 
@@ -204,16 +201,6 @@ function bounds(meshes: Scene["meshes"]) {
   return [min, max];
 }
 
-function materials(meshes: Scene["meshes"]) {
-  const result = new Set<PBRMaterial>();
-
-  for (const mesh of meshes) {
-    if (mesh.material instanceof PBRMaterial) result.add(mesh.material);
-  }
-
-  return result;
-}
-
 function dispose(nodes: Node[]) {
   for (const node of nodes) {
     if (!node.isDisposed()) node.dispose();
@@ -225,7 +212,7 @@ function modelFile(model: ModelId) {
   if (model === "spine-practice" || model === "thorax-practice") {
     return "pectoral-back-thorax-bones-costal-cart";
   }
-  return model === NATURAL_MODEL ? "overview-skull" : model;
+  return model;
 }
 
 function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {

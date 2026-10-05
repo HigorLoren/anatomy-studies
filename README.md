@@ -23,6 +23,14 @@ npm run dev
 Os arquivos de pesquisa ficam fora de `public/` e não fazem parte do build do site.
 Veja o índice da pesquisa em `research/` para continuar investigações.
 
+## Aparência natural do crânio
+
+O modo “Osso natural” carrega `public/overview-skull-natural.glb`, com 15 texturas de cor JPEG de 512 × 512, qualidade 90 e sem subamostragem de cor. O GLB ocupa aproximadamente 1,35 MB e mantém a geometria Draco e os mapas de relevo anatômico originais. O material procedural em TypeScript foi substituído pelas texturas incorporadas. O contador de FPS aparece na visualização 3D e atualiza a cada 500 ms.
+
+Para regenerar o arquivo, execute `python3 scripts/bake-natural-skull.py` com as dependências npm instaladas e Python com NumPy e Pillow.
+
+A experiência KTX2/Basis está preservada na branch `experiment/skull-ktx2`, incluindo o modelo, os decoders locais, os scripts e as instruções. No teste informado pelo usuário no iPhone 13, a versão procedural e a KTX2 tiveram aproximadamente o mesmo FPS (média de 58 FPS); o GLB KTX2 também ficou maior que o JPEG (1,40 MB contra 1,35 MB).
+
 ## Banco de questões e testes
 
 O banco contém 23 perguntas categorizadas por região (crânio, tórax e coluna vertebral) e tipo (identificação, denominação e completar a frase). Cada pergunta tem um identificador, respostas aceitas e explicação em `src/questions.ts`.

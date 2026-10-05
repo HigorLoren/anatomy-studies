@@ -39,6 +39,7 @@ export function AtlasViewer({
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [bone, setBone] = useState<BoneSelection | null>(null);
   const [markers, setMarkers] = useState<Marker[]>([]);
+  const [fps, setFps] = useState<number | null>(null);
 
   const selectionRef = useRef({ checked, onNumberSelect });
 
@@ -60,7 +61,14 @@ export function AtlasViewer({
       },
     );
 
-    return () => viewerRef.current?.dispose();
+    const fpsTimer = window.setInterval(() => {
+      setFps(viewerRef.current?.fps() ?? null);
+    }, 500);
+
+    return () => {
+      window.clearInterval(fpsTimer);
+      viewerRef.current?.dispose();
+    };
   }, [onStatus]);
 
   useEffect(() => viewerRef.current?.load(model), [model]);
@@ -87,6 +95,14 @@ export function AtlasViewer({
         <span class="text-xs text-slate-400">Atlas interativo</span>
         <h2 class="mt-1 text-xl font-normal tracking-tight">{modelLabel}</h2>
       </div>
+      {status === "ready" && fps !== null && (
+        <span
+          class="pointer-events-none absolute top-5 right-6 z-10 rounded-lg bg-black/35 px-2.5 py-1 font-mono text-xs text-slate-300 tabular-nums"
+          aria-label={`Taxa de quadros: ${fps} FPS`}
+        >
+          {fps} FPS
+        </span>
+      )}
       <div class="relative isolate min-h-0 flex-1 overflow-hidden">
         <canvas
           class="block h-full w-full touch-none outline-none"

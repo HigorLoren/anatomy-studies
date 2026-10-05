@@ -132,6 +132,7 @@ export function createViewer(
   });
 
   return {
+    fps: () => Math.round(engine.getFps()),
     exercise(value) {
       loader.arrangeExercise(value);
       exercise.set(value, setupExercise);

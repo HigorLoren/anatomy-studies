@@ -21,6 +21,7 @@ export type Exercise = {
 } | null;
 
 export type Viewer = {
+  fps(): number;
   load(model: ModelId): void;
   exercise(value: Exercise): void;
   reset(view?: "default" | "question"): void;
