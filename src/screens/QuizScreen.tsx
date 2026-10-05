@@ -1,11 +1,6 @@
-import {
-  AnswerFeedback,
-  SelectionFeedback,
-} from "../components/molecules/AnswerFeedback";
-import { MarkerPicker } from "../components/molecules/MarkerPicker";
 import { ProgressBar } from "../components/molecules/ProgressBar";
-import { QuestionInput } from "../components/molecules/QuestionInput";
 import { AtlasViewer } from "../components/organisms/AtlasViewer";
+import { QuizForm } from "../components/organisms/QuizForm";
 import { DEFAULT_MODEL } from "../models";
 import { MARKER_BONES, QUESTIONS, type Question } from "../questions";
 import type { Exercise, ViewerStatus } from "../viewer";
@@ -29,83 +24,6 @@ const questionKinds = {
   name: "Denominação",
 };
 
-function QuizForm({
-  answer,
-  checked,
-  correct,
-  index,
-  question,
-  status,
-  onAdvance,
-  onAnswer,
-  onCheck,
-}: Omit<QuizScreenProps, "onStatus">) {
-  const identify = question.kind === "identify";
-  const complete = question.kind === "complete";
-  const viewerReady = status === "ready";
-  const canSubmit = answer.trim() && (complete || viewerReady);
-  const hint = checked
-    ? complete
-      ? "Leia a explicação antes de continuar, se quiser."
-      : "Observe o modelo antes de continuar, se quiser."
-    : complete
-      ? "Sem pressa. Pense no termo anatômico antes de responder."
-      : "Sem pressa. Explore o modelo antes de responder.";
-
-  return (
-    <>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (checked) onAdvance();
-          else onCheck();
-        }}
-      >
-        {identify ? (
-          <MarkerPicker
-            answer={answer}
-            disabled={checked || !viewerReady}
-            onSelect={onAnswer}
-          />
-        ) : (
-          <QuestionInput
-            answer={answer}
-            checked={checked}
-            question={question}
-            questionIndex={index}
-            viewerReady={viewerReady}
-            onAnswer={onAnswer}
-          />
-        )}
-        {identify && (
-          <SelectionFeedback
-            answer={answer}
-            checked={checked}
-            correct={correct}
-          />
-        )}
-        <AnswerFeedback
-          answer={answer}
-          checked={checked}
-          correct={correct}
-          question={question}
-        />
-        <button
-          class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
-          disabled={!canSubmit}
-        >
-          {checked
-            ? index === QUESTIONS.length - 1
-              ? "Ver resultado"
-              : "Próxima questão"
-            : "Conferir resposta"}
-        </button>
-      </form>
-      <p class="mt-4 text-xs leading-5 text-muted">{hint}</p>
-    </>
-  );
-}
-
 function getExercise(
   question: Question,
   answer: string,
@@ -113,7 +31,9 @@ function getExercise(
   correct: boolean,
 ): Exercise {
   if (question.kind === "name") return { highlight: question.highlight };
+
   if (question.kind === "complete") return null;
+
   return {
     markers: MARKER_BONES,
     highlight: answer ? MARKER_BONES[Number(answer) - 1] : undefined,
@@ -125,19 +45,22 @@ function getExercise(
   };
 }
 
-export function QuizScreen({
-  answer,
-  checked,
-  correct,
-  index,
-  question,
-  status,
-  onAdvance,
-  onAnswer,
-  onCheck,
-  onStatus,
-}: QuizScreenProps) {
+export function QuizScreen(props: QuizScreenProps) {
+  const {
+    answer,
+    checked,
+    correct,
+    index,
+    question,
+    status,
+    onAdvance,
+    onAnswer,
+    onCheck,
+    onStatus,
+  } = props;
+
   const exercise = getExercise(question, answer, checked, correct);
+
   return (
     <section class="flex items-center">
       <div class="w-full">

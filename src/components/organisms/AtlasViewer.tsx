@@ -8,6 +8,10 @@ import {
   type ViewerStatus,
 } from "../../viewer";
 import type { ModelId } from "../../models";
+import { BoneLabel } from "./atlas/BoneLabel";
+import { MarkerButtons } from "./atlas/MarkerButtons";
+import { ViewerControls } from "./atlas/ViewerControls";
+import { ViewerLoader } from "./atlas/ViewerLoader";
 
 type AtlasViewerProps = {
   mode: "explore" | "quiz";
@@ -19,100 +23,6 @@ type AtlasViewerProps = {
   onNumberSelect: (answer: string) => void;
   onStatus: (status: ViewerStatus) => void;
 };
-
-type MarkerButtonsProps = Pick<AtlasViewerProps, "answer" | "checked" | "onNumberSelect"> & {
-  markers: Marker[];
-};
-
-function MarkerButtons({
-  markers,
-  answer,
-  checked,
-  onNumberSelect,
-}: MarkerButtonsProps) {
-  return markers.map(
-    (marker) =>
-      marker.visible && (
-        <button
-          class={`font-[inherit] cursor-pointer transition-colors disabled:cursor-default focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white font-medium leading-none shadow-sm hover:bg-accent disabled:opacity-100 ${answer === String(marker.number) ? "bg-white text-ink ring-2 ring-white/30" : "bg-ink text-white"}`}
-          style={{
-            left: `${marker.x}%`,
-            top: `${marker.y}%`,
-            width: `${marker.size}px`,
-            height: `${marker.size}px`,
-            fontSize: `${Math.max(9, marker.size * 0.58)}px`,
-            borderWidth: `${marker.size < 20 ? 1 : 1.5}px`,
-          }}
-          aria-label={`Selecionar ponto ${marker.number}`}
-          disabled={checked}
-          onClick={() => onNumberSelect(String(marker.number))}
-        >
-          {marker.number}
-        </button>
-      ),
-  );
-}
-
-function ViewerLoader({ status, onRetry }: { status: ViewerStatus; onRetry: () => void }) {
-  if (status === "ready") return null;
-
-  return (
-    <div
-      class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#0a0d14] px-5 text-center text-sm text-slate-300"
-      role={status === "error" ? "alert" : "status"}
-    >
-      {status === "loading" ? (
-        <>
-          <span class="size-6 animate-spin rounded-full border-2 border-slate-600 border-t-white motion-reduce:animate-none" />
-          Preparando o crânio…
-        </>
-      ) : (
-        <>
-          Não foi possível abrir o modelo.
-          <button
-            class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-lg border border-slate-500 px-4 py-2"
-            onClick={onRetry}
-          >
-            Tentar novamente
-          </button>
-        </>
-      )}
-    </div>
-  );
-}
-
-function BoneLabel({ bone }: { bone: BoneSelection | null }) {
-  if (!bone) return null;
-
-  return (
-    <div class="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-lg border border-white/20 bg-ink px-4 py-2 text-sm whitespace-nowrap">
-      {bone.name}
-      {bone.side && (
-        <span class="ml-2 text-xs font-normal text-slate-400">
-          {bone.side === "D" ? "direito" : "esquerdo"}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function ViewerControls({ mode, onReset }: { mode: AtlasViewerProps["mode"]; onReset: () => void }) {
-  return (
-    <div class="relative z-20 flex shrink-0 items-center justify-between gap-2 md:gap-3 border-t border-white/10 px-4 md:px-6 py-5 text-[11px] text-slate-400 sm:px-4 sm:py-3 sm:text-[10px]">
-      <span>
-        <span class="inline-block">Arraste para girar</span> · {" "}
-        <span class="inline-block">Role para aproximar</span>
-      </span>
-      <button
-        class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent text-sm text-slate-300 hover:text-white"
-        onClick={onReset}
-        aria-label={mode === "quiz" ? "Restaurar vista frontal da questão" : "Restaurar vista padrão"}
-      >
-        ↺ <span class="ml-1 text-[11px] sm:hidden">Restaurar vista</span>
-      </button>
-    </div>
-  );
-}
 
 export function AtlasViewer({
   mode,
@@ -129,7 +39,9 @@ export function AtlasViewer({
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const [bone, setBone] = useState<BoneSelection | null>(null);
   const [markers, setMarkers] = useState<Marker[]>([]);
+
   const selectionRef = useRef({ checked, onNumberSelect });
+
   selectionRef.current = { checked, onNumberSelect };
 
   useEffect(() => {
@@ -142,20 +54,27 @@ export function AtlasViewer({
       setBone,
       setMarkers,
       (number) => {
-        if (!selectionRef.current.checked)
+        if (!selectionRef.current.checked) {
           selectionRef.current.onNumberSelect(String(number));
+        }
       },
     );
+
     return () => viewerRef.current?.dispose();
   }, [onStatus]);
+
   useEffect(() => viewerRef.current?.load(model), [model]);
+
   useEffect(() => viewerRef.current?.exercise(exercise), [exercise]);
+
   useEffect(
     () => viewerRef.current?.reset(mode === "quiz" ? "question" : "default"),
     [mode, questionIndex],
   );
 
-  const reset = () => viewerRef.current?.reset(mode === "quiz" ? "question" : "default");
+  const reset = () => {
+    return viewerRef.current?.reset(mode === "quiz" ? "question" : "default");
+  };
 
   return (
     <section
@@ -181,7 +100,10 @@ export function AtlasViewer({
             onNumberSelect={onNumberSelect}
           />
         )}
-        <ViewerLoader status={status} onRetry={() => viewerRef.current?.load(model)} />
+        <ViewerLoader
+          status={status}
+          onRetry={() => viewerRef.current?.load(model)}
+        />
         {mode === "explore" && <BoneLabel bone={bone} />}
       </div>
       <ViewerControls mode={mode} onReset={reset} />
