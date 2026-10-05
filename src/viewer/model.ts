@@ -250,7 +250,7 @@ async function importPracticeModel(model: ModelId, scene: Scene) {
     );
     for (const mesh of cervical.meshes) {
       const key = materialKey(mesh.material?.name ?? "");
-      if (mesh.getTotalVertices() > 0 && !/^(Atlas|Axis|Vertebra_C[47])$/.test(key)) {
+      if (mesh.getTotalVertices() > 0 && !/^(Atlas|Axis|Vertebra_C[3-7])$/.test(key)) {
         mesh.dispose();
       }
     }

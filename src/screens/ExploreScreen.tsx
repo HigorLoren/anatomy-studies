@@ -17,6 +17,19 @@ export function ExploreScreen({
   onStart,
   onStatus,
 }: ExploreScreenProps) {
+  const isSpine = model.startsWith("spine-");
+  const isThorax = model === "thorax-practice";
+  const description = isSpine
+    ? "Gire a coluna vertebral para observar as vértebras, o sacro e o cóccix. Use o zoom para examinar suas estruturas."
+    : isThorax
+      ? "Gire o tórax para observar as costelas, o esterno e as cartilagens costais. Use o zoom para examinar suas estruturas."
+      : "Gire o crânio para observar suas estruturas. No modo osso natural, toque em um osso para revelar sua cor e seu nome.";
+  const context = isSpine
+    ? "Explore as estruturas das regiões cervical, torácica e lombar da coluna vertebral, além do sacro e do cóccix."
+    : isThorax
+      ? "Explore a caixa torácica e observe a relação entre as costelas, o esterno e a coluna vertebral."
+      : "O crânio reúne estruturas do neurocrânio e do viscerocrânio. A prática usa os nomes do catálogo de estruturas anatômicas do projeto.";
+
   return (
     <>
       <AtlasViewer
@@ -40,14 +53,13 @@ export function ExploreScreen({
             uma descoberta.
           </h1>
           <p class="max-w-lg text-[16px] leading-7 text-muted">
-            Gire o crânio para observar suas estruturas. No modo osso natural,
-            toque em um osso para revelar sua cor e seu nome.
+            {description}
           </p>
           <label
             class="mb-3 block text-sm leading-6 font-medium mt-8"
             for="model"
           >
-            Aparência do modelo
+            Modelo anatômico
           </label>
           <select
             class="font-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-ink"
@@ -62,9 +74,7 @@ export function ExploreScreen({
             ))}
           </select>
           <div class="my-8 border-l-2 border-accent pl-5 text-sm leading-7 text-muted">
-            O crânio reúne estruturas do neurocrânio e do viscerocrânio. A
-            prática usa os nomes do catálogo de estruturas anatômicas do
-            projeto.
+            {context}
           </div>
           <button
             class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
