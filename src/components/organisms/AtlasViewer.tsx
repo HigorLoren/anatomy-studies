@@ -99,7 +99,7 @@ export function AtlasViewer({
       ref={sectionRef}
       role={fullscreen ? "dialog" : undefined}
       aria-modal={fullscreen ? true : undefined}
-      class={`flex flex-col overflow-hidden bg-[#0a0d14] text-white ${fullscreen ? "fixed inset-0 z-50 h-dvh w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]" : `relative rounded-3xl ${mode === "quiz" ? "my-6 h-85 sm:h-90" : "h-[75dvh] min-h-130 lg:h-[calc(100dvh-160px)] lg:min-h-150"}`}`}
+      class={`atlas-viewer flex flex-col overflow-hidden bg-[#0a0d14] text-white ${fullscreen ? "fixed inset-0 z-50 h-dvh w-full pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]" : `relative rounded-3xl ${mode === "quiz" ? "my-6 h-85 sm:h-90" : "h-[75dvh] min-h-130 lg:h-[calc(100dvh-160px)] lg:min-h-150"}`}`}
       aria-label={`Visualização: ${modelLabel}`}
     >
       <ViewerToolbar
