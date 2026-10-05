@@ -1,163 +1,10 @@
 import { render } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
-import {
-  createViewer,
-  type BoneSelection,
-  type Marker,
-  type Viewer,
-  type ViewerStatus,
-  type Exercise,
-} from "./viewer";
+import { useState } from "preact/hooks";
+import type { ViewerStatus } from "./viewer";
+import { AtlasViewer } from "./components/organisms/AtlasViewer";
 import { DEFAULT_MODEL, MODELS, type ModelId } from "./models";
 import { QUESTIONS, MARKER_BONES, isCorrect, explainAnswer } from "./questions";
 import "./style.css";
-
-function Atlas({
-  mode,
-  model,
-  exercise,
-  answer,
-  checked,
-  questionIndex,
-  onNumberSelect,
-  onStatus,
-}: {
-  mode: "explore" | "quiz";
-  model: ModelId;
-  exercise: Exercise;
-  answer: string;
-  checked: boolean;
-  questionIndex: number;
-  onNumberSelect: (answer: string) => void;
-  onStatus: (status: ViewerStatus) => void;
-}) {
-  const canvas = useRef<HTMLCanvasElement>(null);
-  const viewer = useRef<Viewer | null>(null);
-  const [status, setStatus] = useState<ViewerStatus>("loading");
-  const [bone, setBone] = useState<BoneSelection | null>(null);
-  const [markers, setMarkers] = useState<Marker[]>([]);
-  const selection = useRef({ checked, onNumberSelect });
-  selection.current = { checked, onNumberSelect };
-  useEffect(() => {
-    viewer.current = createViewer(
-      canvas.current!,
-      (value) => {
-        setStatus(value);
-        onStatus(value);
-      },
-      setBone,
-      setMarkers,
-      (number) => {
-        if (!selection.current.checked)
-          selection.current.onNumberSelect(String(number));
-      },
-    );
-    return () => viewer.current?.dispose();
-  }, []);
-  useEffect(() => {
-    viewer.current?.load(model);
-  }, [model]);
-  useEffect(() => {
-    viewer.current?.exercise(exercise);
-  }, [exercise]);
-  useEffect(() => {
-    viewer.current?.reset(mode === "quiz" ? "question" : "default");
-  }, [mode, questionIndex]);
-  return (
-    <section
-      class={`relative flex flex-col overflow-hidden rounded-3xl bg-[#0a0d14] text-white ${mode === "quiz" ? "my-6 h-85 sm:h-90" : "min-h-120 lg:sticky lg:top-6 lg:h-[min(740px,calc(100dvh-160px))]"}`}
-      aria-label="Visualização do crânio"
-    >
-      <div class="pointer-events-none absolute top-7 left-8 z-10 sm:top-5 sm:left-6">
-        <span class="text-xs text-slate-400">Atlas interativo</span>
-        <h2 class="mt-1 text-xl font-normal tracking-tight">Crânio humano</h2>
-      </div>
-      <div class="relative isolate min-h-0 flex-1 overflow-hidden">
-        <canvas
-          class="block h-full w-full touch-none outline-none"
-          ref={canvas}
-          id="renderCanvas"
-          aria-label="Crânio 3D: arraste para girar e use a rolagem para aproximar"
-        />
-        {status === "ready" &&
-          mode === "quiz" &&
-          markers.map(
-            (marker) =>
-              marker.visible && (
-                <button
-                  class={`font-[inherit] cursor-pointer transition-colors disabled:cursor-default focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white font-medium leading-none shadow-sm hover:bg-accent disabled:opacity-100 ${answer === String(marker.number) ? "bg-white text-ink ring-2 ring-white/30" : "bg-ink text-white"}`}
-                  style={{
-                    left: `${marker.x}%`,
-                    top: `${marker.y}%`,
-                    width: `${marker.size}px`,
-                    height: `${marker.size}px`,
-                    fontSize: `${Math.max(9, marker.size * 0.58)}px`,
-                    borderWidth: `${marker.size < 20 ? 1 : 1.5}px`,
-                  }}
-                  aria-label={`Selecionar ponto ${marker.number}`}
-                  disabled={checked}
-                  onClick={() => onNumberSelect(String(marker.number))}
-                >
-                  {marker.number}
-                </button>
-              ),
-          )}
-        {status !== "ready" && (
-          <div
-            class="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-[#0a0d14] px-5 text-center text-sm text-slate-300"
-            role={status === "error" ? "alert" : "status"}
-          >
-            {status === "loading" ? (
-              <>
-                <span class="size-6 animate-spin rounded-full border-2 border-slate-600 border-t-white motion-reduce:animate-none" />
-                Preparando o crânio…
-              </>
-            ) : (
-              <>
-                Não foi possível abrir o modelo.
-                <button
-                  class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-lg border border-slate-500 px-4 py-2"
-                  onClick={() => viewer.current?.load(model)}
-                >
-                  Tentar novamente
-                </button>
-              </>
-            )}
-          </div>
-        )}
-        {mode === "explore" && bone && (
-          <div class="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-lg border border-white/20 bg-ink px-4 py-2 text-sm whitespace-nowrap">
-            {bone.name}
-            {bone.side && (
-              <span class="ml-2 text-xs font-normal text-slate-400">
-                {bone.side === "D" ? "direito" : "esquerdo"}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-      <div class="relative z-20 flex shrink-0 items-center justify-between gap-2 md:gap-3 border-t border-white/10 px-4 md:px-6 py-5 text-[11px] text-slate-400 sm:px-4 sm:py-3 sm:text-[10px]">
-        <span>
-          <span class="inline-block">Arraste para girar</span> ·{" "}
-          <span class="inline-block">Role para aproximar</span>
-        </span>
-        <button
-          class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent text-sm text-slate-300 hover:text-white"
-          onClick={() =>
-            viewer.current?.reset(mode === "quiz" ? "question" : "default")
-          }
-          aria-label={
-            mode === "quiz"
-              ? "Restaurar vista frontal da questão"
-              : "Restaurar vista padrão"
-          }
-        >
-          ↺ <span class="ml-1 text-[11px] sm:hidden">Restaurar vista</span>
-        </button>
-      </div>
-    </section>
-  );
-}
 
 function App() {
   const [mode, setMode] = useState<"intro" | "quiz" | "result" | "explore">(
@@ -257,7 +104,7 @@ function App() {
           </div>
         )}
         {mode === "explore" && (
-          <Atlas
+          <AtlasViewer
             mode="explore"
             model={model}
             exercise={null}
@@ -357,7 +204,7 @@ function App() {
               </h1>
               <p class="text-[14px] text-muted">{question.instruction}</p>
               {question.kind !== "complete" && (
-                <Atlas
+                <AtlasViewer
                   mode="quiz"
                   model={DEFAULT_MODEL}
                   exercise={
