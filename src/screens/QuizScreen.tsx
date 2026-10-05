@@ -83,8 +83,8 @@ export function QuizScreen(props: QuizScreenProps) {
         <ProgressBar current={index} total={total} />
         {question.kind === "name" && exercise?.highlight && (
           <p class="mb-3 flex items-center gap-2 text-xs text-muted">
-            <span class="h-3 w-3 shrink-0 rounded-sm border-2 border-blue-500 bg-blue-100" aria-hidden="true" />
-            Azul e contorno indicam a estrutura a nomear.
+            <span class="h-3 w-3 shrink-0 rounded-sm border-2 border-blue-500" aria-hidden="true" />
+            O contorno azul indica a estrutura a nomear.
           </p>
         )}
         <h1 class="mb-2 text-[clamp(2rem,3vw,2.6rem)] leading-[1.13] font-medium tracking-[-0.045em]">

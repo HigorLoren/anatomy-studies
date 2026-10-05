@@ -173,7 +173,9 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   setModel(min.add(max).scale(0.505), radius);
 
   camera.alpha = exercise ? Math.PI / 2 : Math.PI / 2.9;
-  camera.beta = exercise?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
+  camera.beta = (exercise?.isolatedBones?.length ?? 0) > 1
+    ? 0.01
+    : exercise?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
   camera.minZ = radius / 100;
   camera.maxZ = radius * 100;
   camera.lowerRadiusLimit = radius * 0.3;

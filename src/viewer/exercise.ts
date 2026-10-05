@@ -104,7 +104,6 @@ function highlight(scene: Scene, exercise: Exercise) {
 
     const color = highlightColor(name, exercise);
 
-    mesh.material.emissiveColor = color;
     mesh.renderOutline = exercise?.highlight === name || exercise?.correctHighlight === name;
     if (mesh.renderOutline) outline(mesh, color);
   }

@@ -36,8 +36,8 @@ export function createIsolatedBones(meshes: AbstractMesh[]) {
     groups.forEach((group, index) => {
       const target = new Vector3(
         (index % columns - (columns - 1) / 2) * spacing,
-        ((rows - 1) / 2 - Math.floor(index / columns)) * spacing,
         0,
+        (Math.floor(index / columns) - (rows - 1) / 2) * spacing,
       );
       const offset = target.subtract(boxes[index].center);
       for (const mesh of group) {

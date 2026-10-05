@@ -62,7 +62,7 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
   {
     kind: "name",
     title: "Como se chama o osso destacado?",
-    instruction: "Observe a estrutura em azul e escreva seu nome anatômico.",
+    instruction: "Observe a estrutura com contorno azul e escreva seu nome anatômico.",
     answer: "Osso mandíbula",
     accepted: ["osso mandíbula", "osso mandibular"],
     incompleteAccepted: ["mandíbula", "mandibular"],
@@ -73,7 +73,7 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
   {
     kind: "name",
     title: "Denomine esta estrutura.",
-    instruction: "Identifique o osso destacado em azul no modelo.",
+    instruction: "Identifique o osso com contorno azul no modelo.",
     answer: "Osso nasal",
     accepted: ["osso nasal", "ossos nasais"],
     incompleteAccepted: ["nasal"],
@@ -152,7 +152,7 @@ rawQuestions.push({
   kind: "name",
   model: "thorax-practice",
   title: "Qual parte do esterno está destacada?",
-  instruction: "Observe a parte alongada em azul e escreva seu nome anatômico.",
+  instruction: "Observe a parte alongada com contorno azul e escreva seu nome anatômico.",
   highlight: "Body of sternum",
   answer: "Corpo do esterno",
   accepted: ["corpo do esterno", "corpo esternal"],

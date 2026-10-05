@@ -7,6 +7,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Scene } from "@babylonjs/core/scene";
+import { focusPiece } from "./viewer/focusPiece";
 import { createExercise } from "./viewer/exercise";
 import { createMarkers } from "./viewer/markers";
 import { createModelLoader } from "./viewer/model";
@@ -91,6 +92,7 @@ export function createViewer(
   const setupExercise = () => {
     markers.configure(exercise.value, radius);
     exercise.highlight();
+    focusPiece(scene, camera, exercise.value);
   };
 
   const loader = createModelLoader({
@@ -144,7 +146,9 @@ export function createViewer(
       });
       camera.setTarget(center.clone());
       camera.alpha = view === "question" ? Math.PI / 2 : Math.PI / 2.9;
-      camera.beta = exercise.value?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
+      camera.beta = (exercise.value?.isolatedBones?.length ?? 0) > 1
+        ? 0.01
+        : exercise.value?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
       frameModel();
     },
     load(model) {
