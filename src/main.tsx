@@ -1,5 +1,6 @@
 import { render } from "preact";
 import { useState } from "preact/hooks";
+import { usePractice } from "./app/usePractice";
 import type { ViewerStatus } from "./viewer";
 import { AtlasViewer } from "./components/organisms/AtlasViewer";
 import { AppHeader } from "./components/molecules/AppHeader";
@@ -15,41 +16,28 @@ function App() {
   );
   const [model, setModel] = useState<ModelId>(DEFAULT_MODEL);
   const [status, setStatus] = useState<ViewerStatus>("loading");
-  const [index, setIndex] = useState(0);
-  const [answer, setAnswer] = useState("");
-  const [answers, setAnswers] = useState<string[]>([]);
-  const [checked, setChecked] = useState(false);
-
-  const question = QUESTIONS[index];
-
-  const correct = isCorrect(question, answer);
-
-  const score = answers.filter((value, i) =>
-    isCorrect(QUESTIONS[i], value),
-  ).length;
+  const {
+    answer,
+    answers,
+    checked,
+    check,
+    correct,
+    index,
+    next,
+    question,
+    score,
+    setAnswer,
+    start: resetPractice,
+  } = usePractice();
 
   function start() {
-    setIndex(0);
-    setAnswer("");
-    setAnswers([]);
-    setChecked(false);
+    resetPractice();
     setModel(DEFAULT_MODEL);
     setMode("quiz");
   }
 
-  function check() {
-    if (!answer.trim() || checked) return;
-    setAnswers([...answers, answer]);
-    setChecked(true);
-  }
-
-  function next() {
-    if (index === QUESTIONS.length - 1) setMode("result");
-    else {
-      setIndex(index + 1);
-      setAnswer("");
-      setChecked(false);
-    }
+  function advance() {
+    if (next()) setMode("result");
   }
 
   return (
@@ -140,7 +128,7 @@ function App() {
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  checked ? next() : check();
+                  checked ? advance() : check();
                 }}
               >
                 {question.kind === "identify" ? (
