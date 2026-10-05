@@ -80,7 +80,6 @@ export function QuizForm({
         <AnswerFeedback
           answer={answer}
           checked={checked}
-          correct={correct}
           question={question}
         />
         <button

@@ -29,6 +29,7 @@ export type Question = {
   instruction: string;
   answer: string;
   accepted: string[];
+  incompleteAccepted?: string[];
   explanation: string;
   highlight?: string;
   model?: ModelId;
@@ -61,8 +62,9 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
     kind: "name",
     title: "Como se chama o osso destacado?",
     instruction: "Observe a estrutura em azul e escreva seu nome anatômico.",
-    answer: "Mandíbula",
-    accepted: ["mandíbula", "osso mandíbula", "osso mandibular"],
+    answer: "Osso mandíbula",
+    accepted: ["osso mandíbula", "osso mandibular"],
+    incompleteAccepted: ["mandíbula", "mandibular"],
     highlight: "Mandible bone",
     explanation:
       "A estrutura destacada é a mandíbula, um dos ossos do viscerocrânio.",
@@ -72,7 +74,8 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
     title: "Denomine esta estrutura.",
     instruction: "Identifique o osso destacado em azul no modelo.",
     answer: "Osso nasal",
-    accepted: ["nasal", "osso nasal", "ossos nasais"],
+    accepted: ["osso nasal", "ossos nasais"],
+    incompleteAccepted: ["nasal"],
     highlight: "Nasal bone",
     explanation: "O destaque mostra o osso nasal, parte do viscerocrânio.",
   },
@@ -88,14 +91,14 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
 ];
 
 const spineStructures = [
-  { key: "Atlas", name: "Atlas", accepted: ["atlas", "C1", "primeira vértebra cervical"], explanation: "O atlas é a primeira vértebra cervical (C1) e se articula com o crânio." },
-  { key: "Axis", name: "Áxis", accepted: ["áxis", "C2", "segunda vértebra cervical"], explanation: "O áxis é a segunda vértebra cervical (C2), caracterizada pela presença do dente." },
-  { key: "Vertebra_C7", name: "Vértebra proeminente (C7)", accepted: ["C7", "vértebra proeminente", "sétima vértebra cervical", "vértebra cervical C7"], explanation: "C7 é conhecida como vértebra proeminente por seu processo espinhoso longo." },
-  { key: "Vertebra_C4", name: "Vértebra cervical típica", accepted: ["vértebra cervical típica", "vértebra cervical", "cervical", "C4"], explanation: "O destaque corresponde a C4, um exemplo de vértebra cervical típica, com forames transversários." },
-  { key: "Vertebra_T7", name: "Vértebra torácica", accepted: ["vértebra torácica", "torácica", "T7"], explanation: "O destaque corresponde a T7, uma vértebra torácica que apresenta superfícies articulares para as costelas." },
-  { key: "Vertebra_L3", name: "Vértebra lombar", accepted: ["vértebra lombar", "lombar", "L3"], explanation: "O destaque corresponde a L3, uma vértebra lombar com corpo volumoso adaptado à sustentação de peso." },
-  { key: "sacrum", name: "Sacro", accepted: ["sacro", "osso sacro"], explanation: "O sacro resulta habitualmente da fusão de cinco vértebras sacrais." },
-  { key: "Coccyx", name: "Cóccix", accepted: ["cóccix", "osso cóccix"], explanation: "O cóccix é a porção terminal da coluna vertebral, abaixo do sacro." },
+  { key: "Atlas", name: "Primeira vértebra cervical (atlas)", accepted: ["primeira vértebra cervical", "vértebra cervical C1", "vértebra atlas"], incompleteAccepted: ["atlas", "C1"], explanation: "O atlas é a primeira vértebra cervical (C1) e se articula com o crânio." },
+  { key: "Axis", name: "Segunda vértebra cervical (áxis)", accepted: ["segunda vértebra cervical", "vértebra cervical C2", "vértebra áxis"], incompleteAccepted: ["áxis", "C2"], explanation: "O áxis é a segunda vértebra cervical (C2), caracterizada pela presença do dente." },
+  { key: "Vertebra_C7", name: "Sétima vértebra cervical (proeminente)", accepted: ["vértebra proeminente", "sétima vértebra cervical", "vértebra cervical C7"], incompleteAccepted: ["C7", "proeminente"], explanation: "C7 é conhecida como vértebra proeminente por seu processo espinhoso longo." },
+  { key: "Vertebra_C4", name: "Vértebra cervical típica", accepted: ["vértebra cervical típica"], incompleteAccepted: ["vértebra cervical", "cervical típica", "cervical", "C4"], explanation: "O destaque corresponde a C4, um exemplo de vértebra cervical típica, com forames transversários." },
+  { key: "Vertebra_T7", name: "Vértebra torácica", accepted: ["vértebra torácica"], incompleteAccepted: ["torácica", "T7"], explanation: "O destaque corresponde a T7, uma vértebra torácica que apresenta superfícies articulares para as costelas." },
+  { key: "Vertebra_L3", name: "Vértebra lombar", accepted: ["vértebra lombar"], incompleteAccepted: ["lombar", "L3"], explanation: "O destaque corresponde a L3, uma vértebra lombar com corpo volumoso adaptado à sustentação de peso." },
+  { key: "sacrum", name: "Osso sacro", accepted: ["osso sacro"], incompleteAccepted: ["sacro"], explanation: "O sacro resulta habitualmente da fusão de cinco vértebras sacrais." },
+  { key: "Coccyx", name: "Osso cóccix", accepted: ["osso cóccix"], incompleteAccepted: ["cóccix"], explanation: "O cóccix é a porção terminal da coluna vertebral, abaixo do sacro." },
 ];
 
 for (const [index, structure] of spineStructures.entries()) {
@@ -125,7 +128,8 @@ for (const [index, structure] of spineStructures.entries()) {
       instruction: "Observe o destaque azul, gire o modelo e escreva o nome anatômico.",
       highlight: structure.key,
       answer: structure.name,
-      accepted: structure.accepted,
+      accepted: [structure.name, ...structure.accepted],
+      incompleteAccepted: structure.incompleteAccepted,
       explanation: structure.explanation,
     },
   );
@@ -187,14 +191,29 @@ export const normalizeAnswer = (value: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
+    .replace(/\bmm\.(?=\s|$)/g, "musculos")
+    .replace(/\bm\.(?=\s|$)/g, "musculo")
     .trim()
     .replace(/\s+/g, " ")
     .replace(/[.!]$/, "");
 
-export const isCorrect = (question: Question, answer: string) =>
-  question.accepted.some(
-    (value) => normalizeAnswer(value) === normalizeAnswer(answer),
+export type AnswerStatus = "correct" | "incomplete" | "incorrect";
+
+export function classifyAnswer(question: Question, answer: string): AnswerStatus {
+  const normalized = normalizeAnswer(answer);
+  if (!normalized) return "incorrect";
+  const matches = (values: string[]) => values.some(
+    (value) => normalizeAnswer(value) === normalized,
   );
+  if (matches([question.answer, ...question.accepted])) return "correct";
+  if (question.kind !== "identify" && matches(question.incompleteAccepted ?? [])) {
+    return "incomplete";
+  }
+  return "incorrect";
+}
+
+export const isCorrect = (question: Question, answer: string) =>
+  classifyAnswer(question, answer) === "correct";
 
 const MARKER_NAMES = [
   "o osso frontal",
