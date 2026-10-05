@@ -1,3 +1,4 @@
+import "@babylonjs/core/Rendering/outlineRenderer";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
@@ -23,6 +24,7 @@ export function createExercise(
     for (const mesh of scene.meshes) {
       const item = selected.get(mesh.uniqueId);
       if (item) mesh.material = item.original;
+      mesh.renderOutline = false;
     }
     for (const { colored } of selected.values()) colored.dispose();
     selected.clear();
@@ -50,6 +52,7 @@ export function createExercise(
 
     if (item) {
       mesh.material = item.original;
+      mesh.renderOutline = false;
       item.colored.dispose();
       selected.delete(mesh.uniqueId);
       onBoneSelect(null);
@@ -67,6 +70,7 @@ export function createExercise(
       colored.emissiveColor = new Color3(0.03, 0.25, 0.6);
     }
     mesh.material = colored;
+    outline(mesh, new Color3(0.03, 0.25, 0.6));
     selected.set(mesh.uniqueId, { original, colored });
 
     onBoneSelect(boneSelection(original.name, mesh.name));
@@ -92,22 +96,39 @@ export function createExercise(
 }
 
 function highlight(scene: Scene, exercise: Exercise) {
+  if (exercise?.isolatedBones?.length === 1) exercise = null;
+  for (const mesh of scene.meshes) {
+    if (!(mesh.material instanceof PBRMaterial)) continue;
+
+    const name = materialKey(mesh.material.name).replace(/[._][lr]$/, "");
+
+    const color = highlightColor(name, exercise);
+
+    mesh.material.emissiveColor = color;
+    mesh.renderOutline = exercise?.highlight === name || exercise?.correctHighlight === name;
+    if (mesh.renderOutline) outline(mesh, color);
+  }
+}
+
+function outline(mesh: AbstractMesh, color: Color3) {
+  mesh.renderOutline = true;
+  mesh.outlineColor = new Color3(
+    Math.min(color.r * 2, 1), Math.min(color.g * 2, 1), Math.min(color.b * 2, 1),
+  );
+  const box = mesh.getBoundingInfo().boundingBox;
+  mesh.outlineWidth = box.maximum.subtract(box.minimum).length() * 0.008;
+}
+
+function highlightColor(name: string, exercise: Exercise) {
   const colors = {
     blue: new Color3(0.03, 0.25, 0.6),
     red: new Color3(0.65, 0.03, 0.04),
     green: new Color3(0.02, 0.4, 0.16),
   };
 
-  for (const mesh of scene.meshes) {
-    if (!(mesh.material instanceof PBRMaterial)) continue;
-
-    const name = materialKey(mesh.material.name).replace(/[._][lr]$/, "");
-
-    mesh.material.emissiveColor =
-      exercise?.correctHighlight === name
-        ? colors.green
-        : exercise?.highlight === name
-          ? colors[exercise.highlightColor ?? "blue"]
-          : Color3.Black();
-  }
+  return exercise?.correctHighlight === name
+    ? colors.green
+    : exercise?.highlight === name
+      ? colors[exercise.highlightColor ?? "blue"]
+      : Color3.Black();
 }

@@ -32,7 +32,10 @@ function getExercise(
   checked: boolean,
   correct: boolean,
 ): Exercise {
-  if (question.kind === "name") return { highlight: question.highlight, isolatedBones: question.isolatedBones };
+  if (question.kind === "name") return {
+    highlight: question.isolatedBones?.length === 1 ? undefined : question.highlight,
+    isolatedBones: question.isolatedBones,
+  };
 
   if (question.kind === "complete") return null;
 
@@ -78,6 +81,12 @@ export function QuizScreen(props: QuizScreenProps) {
           <span>{questionKinds[question.kind]}</span>
         </div>
         <ProgressBar current={index} total={total} />
+        {question.kind === "name" && exercise?.highlight && (
+          <p class="mb-3 flex items-center gap-2 text-xs text-muted">
+            <span class="h-3 w-3 shrink-0 rounded-sm border-2 border-blue-500 bg-blue-100" aria-hidden="true" />
+            Azul e contorno indicam a estrutura a nomear.
+          </p>
+        )}
         <h1 class="mb-2 text-[clamp(2rem,3vw,2.6rem)] leading-[1.13] font-medium tracking-[-0.045em]">
           {question.title}
         </h1>
