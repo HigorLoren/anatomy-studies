@@ -10,7 +10,7 @@ import type { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import type { Node } from "@babylonjs/core/node";
 import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
-import { applyNaturalBone } from "../naturalBone";
+import { applyNaturalBone } from "./naturalBone";
 import type { ModelId } from "../models";
 import { materialKey } from "./bones";
 import type { Exercise, ViewerStatus } from "./types";
