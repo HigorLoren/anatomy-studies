@@ -23,7 +23,9 @@ export function ExploreScreen({
     ? "Gire a coluna vertebral para observar as vértebras, o sacro e o cóccix. Use o zoom para examinar suas estruturas."
     : isThorax
       ? "Gire o tórax para observar as costelas, o esterno e as cartilagens costais. Use o zoom para examinar suas estruturas."
-      : "Gire o crânio para observar suas estruturas. No modo osso natural, toque em um osso para revelar sua cor e seu nome.";
+      : model === "exploded-skull"
+        ? "Explore o crânio com os ossos separados para observar cada peça. Toque em um osso para destacá-lo e mostrar seu nome."
+        : "Gire o crânio para observar suas estruturas. Toque em um osso para destacá-lo e mostrar seu nome.";
   const context = isSpine
     ? "Explore as estruturas das regiões cervical, torácica e lombar da coluna vertebral, além do sacro e do cóccix."
     : isThorax

@@ -80,7 +80,7 @@ export function AtlasViewer({
     [mode, questionIndex],
   );
 
-  const modelLabel = model.startsWith("spine-") ? "Peças da coluna vertebral" : model === "thorax-practice" ? "Ossos do tórax" : "Crânio humano";
+  const modelLabel = model.startsWith("spine-") ? "Peças da coluna vertebral" : model === "thorax-practice" ? "Ossos do tórax" : model === "exploded-skull" ? "Crânio explodido" : "Crânio humano";
 
   const reset = () => {
     return viewerRef.current?.reset(mode === "quiz" ? "question" : "default");
