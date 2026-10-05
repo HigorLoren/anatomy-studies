@@ -1,63 +1,9 @@
-html, body, #app, #renderCanvas {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-}
+@import "tailwindcss";
 
-#renderCanvas {
-  display: block;
-  touch-action: none;
-}
-
-#status {
-  position: absolute;
-  top: 4rem;
-  left: 1rem;
-  right: 1rem;
-  margin: 0;
-  color: #fff;
-  font: 16px system-ui, sans-serif;
-  pointer-events: none;
-}
-
-#bone-name {
-  position: absolute;
-  top: 4rem;
-  left: 1rem;
-  margin: 0;
-  padding: .4rem .6rem;
-  border-radius: .3rem;
-  background: #18212e;
-  color: #fff;
-  font: 16px system-ui, sans-serif;
-  pointer-events: none;
-}
-
-.bone-side {
-  display: inline-block;
-  margin-left: .5rem;
-  padding: .05rem .35rem;
-  border: 1px solid currentColor;
-  border-radius: .2rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-#model-control {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  color: #fff;
-  font: 16px system-ui, sans-serif;
-}
-
-#model {
-  margin-left: .5rem;
-  padding: .4rem .6rem;
-  border: 1px solid #586273;
-  border-radius: .3rem;
-  background: #18212e;
-  color: #fff;
-  font: inherit;
+@theme {
+  --color-ink: #183648;
+  --color-muted: #637782;
+  --color-paper: #f6f9fb;
+  --color-accent: #236783;
+  --font-sans: "Avenir Next", "Segoe UI", sans-serif;
 }
