@@ -1,0 +1,12 @@
+.git
+.vercel
+.codex
+.scratch
+research
+node_modules
+dist
+docs
+scripts
+README.md
+.DS_Store
+*.tsbuildinfo
