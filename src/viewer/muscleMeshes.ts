@@ -46,11 +46,17 @@ const SUPERFICIAL_COVERS = [
   "Rectus femoris", "Lateral head of gastrocnemius", "Medial head of gastrocnemius",
 ];
 
+const DETACHED_CLAVICULAR_PIECES = [
+  "clavicle", "Subclavius muscle", "Costoclavicular ligament", "Interclavicular ligament",
+  "Sternoclavicular capsule",
+];
+
 export function isStudyObstruction(model: ModelId, material: string, names: string[]) {
   const key = materialKey(material).replace(/[._][lr]$/, "");
   if (key === "sacrum") return true;
   if (model === "upper-muscles-practice" && names.some(name =>
-    /^(clavicle)$|(?:articular cartilage|art cart).*clavicle/i.test(name),
+    DETACHED_CLAVICULAR_PIECES.includes(name)
+      || /(?:articular cartilage|art cart).*clavicle/i.test(name),
   )) return true;
   if (isAxialStructure(names)) return true;
   if (/^(Disc|Bursae)$/.test(key)) return true;

@@ -69,7 +69,8 @@ test("muscles sharing textures are selected by anatomical node and all heads sta
       "Rib (1st).r", "Rib (12th).r", "Costal cart of 1st.rib.r",
       "10th rib art cart of head.r", "annulus fibrosus C2 C3", "Nucleus pulposus T1-L1",
       "Vertebra L3 art cart.", "art cart of Atlas  C1", "art cart of sacrum lumbosacral joint",
-      "Disc", "Disc.001", "Bursae"]
+      "Disc", "Disc.001", "Bursae", "Subclavius muscle.r", "Costoclavicular ligament.r",
+      "Interclavicular ligament.r", "Sternoclavicular capsule.r"]
       .map((name) => {
         const mesh = CreateBox(name, { size: 1 }, scene);
         mesh.material = new PBRMaterial(name, scene);

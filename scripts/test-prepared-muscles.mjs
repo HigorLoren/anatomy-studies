@@ -48,6 +48,10 @@ for (const [originalName, preparedName, covers] of variants) {
         "clavicle must be absent from prepared and covered upper muscle views");
       assert(!nodes.some(name => /(?:art cart|articular cartilage).*clavicle/i.test(name)),
         "cartilage on removed clavicle must also be absent");
+      assert(!nodes.some(name => /^(Subclavius muscle|Costoclavicular ligament|Interclavicular ligament|Sternoclavicular capsule)(?:[._][lr])?$/.test(name)),
+        "detached subclavius and medial clavicular ligaments must be absent");
+      assert(nodes.some(name => /^Levator scapulae/.test(name)),
+        "levator scapulae must remain attached to the scapula");
       assert(doc.materials.some(material => /^Scapula(?:\.\d+)?$/.test(material.name)));
     } else {
       assert(doc.materials.some(material => /^Hip bone(?:\.\d+)?$/.test(material.name)),
