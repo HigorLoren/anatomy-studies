@@ -1,3 +1,4 @@
+import { attachTrackball } from "./viewer/trackball";
 import "@babylonjs/loaders/glTF";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Engine } from "@babylonjs/core/Engines/engine";
@@ -50,6 +51,7 @@ export function createViewer(
     scene,
   );
   camera.attachControl(canvas, true);
+  const trackball = attachTrackball(canvas, camera);
   camera.useNaturalPinchZoom = true;
 
   const fillLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
@@ -77,6 +79,7 @@ export function createViewer(
   const exercise = createExercise(scene, onBoneSelect);
 
   const setupExercise = () => {
+    trackball.setExercise(exercise.value);
     markers.configure(exercise.value, radius);
     exercise.highlight();
     focusPiece(scene, camera, exercise.value);
@@ -147,6 +150,7 @@ export function createViewer(
       onBoneSelect(null); void loader.load(model, exercise.clear);
     },
     dispose() {
+      trackball.dispose();
       loader.dispose();
       exercise.clear();
       window.removeEventListener("resize", resize);
