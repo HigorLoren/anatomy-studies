@@ -1,4 +1,5 @@
 import { allBlanksFilled } from "../../answerBlanks";
+import { QuizActions } from "../molecules/QuizActions";
 import { AnswerFeedback } from "../molecules/AnswerFeedback";
 import { SelectionFeedback } from "../molecules/SelectionFeedback";
 import { MarkerPicker } from "../molecules/MarkerPicker";
@@ -18,6 +19,7 @@ type QuizFormProps = {
   onAdvance: () => void;
   onAnswer: (answer: string) => void;
   onCheck: () => void;
+  onSkip: () => void;
 };
 
 export function QuizForm({
@@ -32,11 +34,12 @@ export function QuizForm({
   onAdvance,
   onAnswer,
   onCheck,
+  onSkip,
 }: QuizFormProps) {
   const identify = question.kind === "identify";
   const complete = isWrittenQuestion(question);
   const viewerReady = status === "ready";
-  const canSubmit = allBlanksFilled(question, answer) && (complete || viewerReady);
+  const canSubmit = checked || (allBlanksFilled(question, answer) && (complete || viewerReady));
   const hint = checked
     ? complete
       ? "Leia a explicação antes de continuar, se quiser."
@@ -83,16 +86,7 @@ export function QuizForm({
           checked={checked}
           question={question}
         />
-        <button
-          class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent mt-6 flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
-          disabled={!canSubmit}
-        >
-          {checked
-            ? index === total - 1
-              ? free ? "Voltar à primeira questão" : "Ver resultado"
-              : "Próxima questão"
-            : "Conferir resposta"}
-        </button>
+        <QuizActions {...{ checked, index, total, free, canSubmit, onSkip }} />
       </form>
       <p class="mt-4 text-xs leading-5 text-muted">{hint}</p>
     </>

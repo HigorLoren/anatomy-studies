@@ -18,6 +18,7 @@ type QuizScreenProps = {
   onAdvance: () => void;
   onAnswer: (answer: string) => void;
   onCheck: () => void;
+  onSkip: () => void;
   onStatus: (status: ViewerStatus) => void;
 };
 
@@ -67,6 +68,7 @@ export function QuizScreen(props: QuizScreenProps) {
     onAdvance,
     onAnswer,
     onCheck,
+    onSkip,
     onStatus,
   } = props;
 
@@ -121,6 +123,7 @@ export function QuizScreen(props: QuizScreenProps) {
             onAdvance,
             onAnswer,
             onCheck,
+            onSkip,
           }}
         />
       </div>

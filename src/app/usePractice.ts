@@ -29,14 +29,23 @@ export function usePractice() {
     setChecked(false);
   }
 
-  function check() {
-    if (!answer.trim() || checked) return;
+  function saveAnswer(value: string) {
+    if (checked) return;
     setAnswers((current) => {
       const updated = [...current];
-      updated[index] = answer;
+      updated[index] = value;
       return updated;
     });
     setChecked(true);
+  }
+
+  function check() {
+    if (answer.trim()) saveAnswer(answer);
+  }
+
+  function skip() {
+    setAnswer("");
+    saveAnswer("");
   }
 
   function next() {
@@ -47,6 +56,6 @@ export function usePractice() {
 
   return {
     answer, answers, checked, check, correct, index, next, question,
-    questions, score, setAnswer, start, goTo,
+    questions, score, setAnswer, start, goTo, skip,
   };
 }

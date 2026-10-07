@@ -108,6 +108,7 @@ function App() {
               onAdvance={advance}
               onAnswer={practice.setAnswer}
               onCheck={practice.check}
+              onSkip={practice.skip}
               onStatus={setStatus}
             />
           </>
