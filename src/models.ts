@@ -9,7 +9,10 @@ export const MODELS = [
 
 export type ModelId =
   | (typeof MODELS)[number]["value"]
-  | "spine-cervical-practice";
+  | "spine-cervical-practice"
+  | "skeleton-practice"
+  | "upper-limb-practice"
+  | "lower-limb-practice";
 export const DEFAULT_MODEL: ModelId = "overview-skull-natural";
 
 export const SPINE_PIECES = [

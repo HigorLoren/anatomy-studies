@@ -15,6 +15,7 @@ export type Marker = {
 export type Exercise = {
   markers?: string[];
   isolatedBones?: string[];
+  preserveLayout?: boolean;
   highlight?: string;
   highlightColor?: "blue" | "red" | "green";
   correctHighlight?: string;

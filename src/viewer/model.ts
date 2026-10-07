@@ -7,10 +7,10 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import type { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import type { Node } from "@babylonjs/core/node";
-import type { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import type { Scene } from "@babylonjs/core/scene";
 import { createVertebraAppearance } from "./vertebraAppearance";
 import { createPaintMaterials } from "./paintMaterials";
+import { mirrorRightGroups } from "./mirrorRightGroups";
 import { createIsolatedBones } from "./isolatedBones";
 import { SPINE_PIECES, type ModelId } from "../models";
 import { materialKey } from "./bones";
@@ -38,7 +38,7 @@ export function createModelLoader(options: Options) {
   let currentNodes: Node[] = [];
   let loadId = 0;
   let layoutSignature = "";
-  let arrange: ((keys: string[]) => void) | undefined;
+  let arrange: ((keys: string[], preserveLayout?: boolean) => void) | undefined;
 
   const load = async (
     model: ModelId,
@@ -69,20 +69,20 @@ export function createModelLoader(options: Options) {
       const nodes = mirrorRightGroups(imported.transformNodes, [
         ...imported.meshes,
         ...imported.transformNodes,
-      ]);
+      ], imported.meshes);
 
       clearSelection();
       dispose(currentNodes);
       currentNodes = nodes;
-      arrange = model.startsWith("spine-")
+      arrange = usesIsolatedBones(model)
         ? createIsolatedBones(imported.meshes.filter((mesh) => !mesh.isDisposed()))
         : undefined;
-      const display = model === "spine-pieces"
+      const display: Exercise = model === "spine-pieces"
         ? { isolatedBones: SPINE_PIECES } : options.getExercise();
       const keys = display?.isolatedBones;
       if (keys?.length) {
-        arrange?.(keys);
-        layoutSignature = keys.join("|");
+        arrange?.(keys, preservesLayout(display));
+        layoutSignature = layoutKey(keys, preservesLayout(display));
       }
       replacements = materials;
       configure(options, natural, display);
@@ -98,14 +98,17 @@ export function createModelLoader(options: Options) {
 
   return {
     load,
-    get isolatedCount() { return layoutSignature ? layoutSignature.split("|").length : 0; },
+    get isolatedCount() {
+      if (layoutSignature.startsWith("connected:")) return 1;
+      return layoutSignature ? layoutSignature.split("|").length : 0;
+    },
     get naturalMaterials() { return replacements; },
     arrangeExercise(value: Exercise) {
       if (!arrange || !value?.isolatedBones?.length) return;
-      const nextSignature = value.isolatedBones.join("|");
+      const nextSignature = layoutKey(value.isolatedBones, value.preserveLayout);
       if (layoutSignature === nextSignature) return;
       layoutSignature = nextSignature;
-      arrange(value.isolatedBones);
+      arrange(value.isolatedBones, value.preserveLayout);
       configure(options, false, value);
     },
     dispose: () => {
@@ -116,26 +119,6 @@ export function createModelLoader(options: Options) {
   };
 }
 
-function mirrorRightGroups(groups: TransformNode[], nodes: Node[]) {
-  for (const group of groups.filter((node) => node.name.endsWith("_right"))) {
-    const left = group.clone(
-      group.name.replace(/_right$/, "_left"),
-      group.parent,
-    );
-
-    if (!left) continue;
-
-    const mirrored = left as TransformNode;
-
-    mirrored.scaling.x *= -1;
-    nodes.push(mirrored);
-
-    for (const mesh of mirrored.getChildMeshes()) {
-      mesh.name = mesh.name.replace(`${group.name}.`, "").replace(/\.r$/, ".l");
-    }
-  }
-  return nodes;
-}
 
 function configure(options: Options, natural: boolean, exercise: Exercise) {
   const {
@@ -147,7 +130,9 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
     setModel,
   } = options;
 
-  const geometry = scene.meshes.filter((mesh) => mesh.getTotalVertices() > 0 && mesh.isEnabled());
+  const geometry = scene.meshes.filter((mesh) =>
+    mesh.getTotalVertices() > 0 && mesh.isEnabled(),
+  );
 
   if (!geometry.length) {
     throw new Error("O arquivo não contém geometria visível.");
@@ -161,7 +146,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   setModel(min.add(max).scale(0.505), radius);
 
   camera.alpha = exercise ? Math.PI / 2 : Math.PI / 2.9;
-  camera.beta = (exercise?.isolatedBones?.length ?? 0) > 1
+  camera.beta = separatedGroup(exercise)
     ? 0.01
     : exercise?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
   camera.minZ = radius / 100;
@@ -195,7 +180,8 @@ function dispose(nodes: Node[]) {
 }
 
 function modelFile(model: ModelId) {
-  if (model === "spine-pieces" || model === "spine-cervical-practice") return "overview-skeleton";
+  if (model.endsWith("-limb-practice")) return "overview-skeleton";
+  if (model === "skeleton-practice" || model === "spine-pieces" || model === "spine-cervical-practice") return "overview-skeleton";
   if (model === "spine-practice" || model === "thorax-practice") {
     return "pectoral-back-thorax-bones-costal-cart";
   }
@@ -203,6 +189,10 @@ function modelFile(model: ModelId) {
 }
 
 function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {
+  if (model.endsWith("-limb-practice")) {
+    filterLimbMeshes(model, meshes);
+    return;
+  }
   if (!model.startsWith("spine-")) return;
   for (const mesh of meshes) {
     const key = materialKey(mesh.material?.name ?? "");
@@ -239,4 +229,41 @@ async function importPracticeModel(model: ModelId, scene: Scene) {
 
 function usesBoneTexture(model: ModelId) {
   return model === "spine-pieces" || model === "spine-practice" || model === "thorax-practice";
+}
+
+function usesIsolatedBones(model: ModelId) {
+  return model.startsWith("spine-") || model === "skeleton-practice";
+}
+
+function isLimbBone(model: ModelId, key: string) {
+  if (model === "upper-limb-practice") {
+    const bones = ["humerus", "radius", "ulna", "Scapula", "clavicle", "Capitate", "Hamate",
+      "Lunate bone", "Pisiform", "Scaphoid", "Trapezium", "Trapezoid", "Triquetrum"];
+    return bones.includes(key)
+      || /metacarpal bone$/.test(key)
+      || (key.includes("phalanx") && !key.includes("foot"));
+  }
+  const bones = ["Hip bone", "femur", "Patella", "Tibia", "Fibula", "calcaneus", "Talus",
+    "Cuboid bone", "Navicular bone", "Medial cuneiform", "Intermediate cuneiform",
+    "Lateral cuneiform", "Sesamoid bones of foot"];
+  return bones.includes(key) || /metatarsal bone$/i.test(key) || key.includes("finger of foot");
+}
+
+function filterLimbMeshes(model: ModelId, meshes: Scene["meshes"]) {
+  for (const mesh of meshes) {
+    const key = materialKey(mesh.material?.name ?? "").replace(/[._][lr]$/, "");
+    if (mesh.getTotalVertices() > 0 && !isLimbBone(model, key)) mesh.dispose();
+  }
+}
+
+function layoutKey(keys: string[], preserveLayout = false) {
+  return `${preserveLayout ? "connected:" : "isolated:"}${keys.join("|")}`;
+}
+
+function preservesLayout(exercise: Exercise) {
+  return exercise?.preserveLayout ?? false;
+}
+
+function separatedGroup(exercise: Exercise) {
+  return (exercise?.isolatedBones?.length ?? 0) > 1 && !preservesLayout(exercise);
 }
