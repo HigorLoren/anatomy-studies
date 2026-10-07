@@ -219,6 +219,22 @@ export function classifyAnswer(question: Question, answer: string): AnswerStatus
   const matches = (values: string[]) => values.some(
     (value) => normalizeAnswer(value) === normalized,
   );
+  if (question.answerGroups) {
+    const parts = muscleListParts(answer, question.sourceNumber);
+    const groups = question.answerGroups;
+    const remaining = [...parts];
+    const unordered = [31, 38, 40, 44, 45, 69].includes(question.sourceNumber ?? 0);
+    const valid = parts.length === groups.length && groups.every((group, index) => {
+      if (!unordered) return group.some((term) => normalizeAnswer(term) === parts[index]);
+      const found = remaining.findIndex((part) =>
+        group.some((term) => normalizeAnswer(term) === part),
+      );
+      if (found < 0) return false;
+      remaining.splice(found, 1);
+      return true;
+    });
+    if (valid) return "correct";
+  }
   if (matches([question.answer, ...question.accepted])) return "correct";
   if (question.kind !== "identify" && matches(question.incompleteAccepted ?? [])) {
     return "incomplete";
@@ -245,4 +261,12 @@ export function explainAnswer(question: Question, answer: string) {
       ? `Você selecionou ${selectedBone} (ponto ${answer}). `
       : "";
   return selection + question.explanation;
+}
+
+function muscleListParts(answer: string, sourceNumber?: number) {
+  let value = normalizeAnswer(answer);
+  const plural = sourceNumber === 31 && value.startsWith("musculos ");
+  if (plural) value = value.replace(/^musculos /, "");
+  const parts = value.split(/\s*(?:;|,|\be\b)\s*/i).filter(Boolean);
+  return plural ? parts.map((part) => `musculo ${part}`) : parts;
 }
