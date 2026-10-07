@@ -1,28 +1,36 @@
-type ViewerControlsProps = { mode: "explore" | "quiz"; onReset: () => void };
+import { useState } from "preact/hooks";
+import { ViewerIcon } from "./ViewerIcon";
 
-export function ViewerControls({ mode, onReset }: ViewerControlsProps) {
+type ViewerControlsProps = {
+  mode: "explore" | "quiz";
+  ready: boolean;
+  onReset: () => void;
+  onZoom: () => void;
+};
+
+export function ViewerControls({ mode, ready, onReset, onZoom }: ViewerControlsProps) {
+  const [showHelp, setShowHelp] = useState(false);
   return (
-    <div class="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-white/10 px-4 md:px-6 py-3 text-xs leading-5 text-slate-400">
-      <span>
-        <span class="inline-block">Arraste para girar</span> ·{" "}
+    <div class="viewer-controls">
+      <span class="viewer-short-help">
+        Arraste para girar<br />
         <span class="viewer-touch-hint">Pince para aproximar</span>
-        <span class="viewer-mouse-hint">Role para aproximar</span> ·{" "}
-        <span class="viewer-touch-hint">Arraste com 2 dedos para mover</span>
-        <span class="viewer-mouse-hint">Segure Ctrl e arraste para mover a vista</span>
+        <span class="viewer-mouse-hint">Role para aproximar</span>
       </span>
-      <button
-        class="flex min-h-12 shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-white/20 px-4 py-2 font-[inherit] text-sm text-white transition-colors hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-        type="button"
-        onClick={onReset}
-        aria-label={
-          mode === "quiz"
-            ? "Resetar visualização da questão"
-            : "Resetar visualização"
-        }
-      >
-        <span class="text-xl" aria-hidden="true">↺</span>
-        <span>Resetar visualização</span>
-      </button>
+      <div class="viewer-tools">
+        {showHelp && <div id="viewer-gesture-help" class="viewer-gesture-help" role="status">
+          <span class="viewer-touch-hint">Arraste para girar, pince para aproximar e use dois dedos para mover a peça.</span>
+          <span class="viewer-mouse-hint">Arraste para girar, role para aproximar e segure Ctrl ao arrastar para mover a peça.</span>
+        </div>}
+        <button type="button" class="viewer-icon-button" aria-label="Como controlar a visualização"
+          title="Como controlar a visualização" aria-expanded={showHelp} aria-controls={showHelp ? "viewer-gesture-help" : undefined}
+          onClick={() => setShowHelp((value) => !value)}><ViewerIcon name="help" /></button>
+        <button type="button" class="viewer-icon-button" disabled={!ready} onClick={onReset}
+          aria-label={mode === "quiz" ? "Resetar visualização da questão" : "Resetar visualização"}
+          title="Resetar visualização"><ViewerIcon name="reset" /></button>
+        <button type="button" class="viewer-icon-button" disabled={!ready} onClick={onZoom}
+          aria-label="Aproximar peça" title="Aproximar peça"><ViewerIcon name="zoom" /></button>
+      </div>
     </div>
   );
 }

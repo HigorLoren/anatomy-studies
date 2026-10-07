@@ -59,9 +59,9 @@ function App() {
         onExplore={() => setMode("explore")}
       />
       <main
-        class={`grid gap-10 py-8 xl:gap-16 sm:gap-7 ${
+        class={`grid gap-6 py-6 ${
           mode === "explore"
-            ? "pt-6"
+            ? "explore-main"
             : mode === "intro"
             ? "mx-auto w-full max-w-5xl pt-6 md:pt-12"
             : "mx-auto max-w-3xl sm:pt-3"

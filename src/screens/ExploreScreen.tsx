@@ -49,33 +49,15 @@ export function ExploreScreen({
         onNumberSelect={() => {}}
         onStatus={onStatus}
       />
-      <section class="flex items-center">
-        <div class="grid w-full gap-6 lg:grid-cols-[1fr_1.2fr_auto] lg:items-center">
-          <div>
-            <span class="mb-3 block text-sm font-medium text-accent">
-              Exploração livre
-            </span>
-            <h1 class="mb-5 text-[clamp(2rem,3.2vw,3rem)] leading-[1.13] font-medium tracking-[-0.045em]">
-              Cada osso,
-              <br />
-              uma descoberta.
-            </h1>
+      <section class="explore-context" aria-label="Sobre este modelo">
+        <details>
+          <summary>Atlas interativo <span class="text-muted">· Sobre o modelo</span></summary>
+          <div class="explore-description">
+            <p>{description}</p>
+            <p>{context}</p>
           </div>
-          <div>
-            <p class="max-w-lg text-[16px] leading-7 text-muted">
-              {description}
-            </p>
-            <div class="mt-4 border-l-2 border-accent pl-5 text-sm leading-7 text-muted">
-              {context}
-          </div>
-          </div>
-          <button
-            class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent flex min-h-14 items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
-            onClick={onStart}
-          >
-            Praticar com questões
-          </button>
-        </div>
+        </details>
+        <button type="button" onClick={onStart}>Praticar com questões <span aria-hidden="true">→</span></button>
       </section>
     </>
   );
