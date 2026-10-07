@@ -3,11 +3,21 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import ts from "typescript";
 
-const source = readFileSync(new URL("../src/questions.ts", import.meta.url), "utf8");
+let source = readFileSync(new URL("../src/questions.ts", import.meta.url), "utf8");
+for (let part = 1; part <= 3; part++) {
+  source = source.replace(
+    `import { SIMULADO_PART_${part} } from "./simuladoPart${part}";`,
+    readFileSync(new URL(`../src/simuladoPart${part}.ts`, import.meta.url), "utf8"),
+  );
+}
+source += readFileSync(new URL("../src/practicalHints.ts", import.meta.url), "utf8");
+source += readFileSync(new URL("../src/answerBlanks.ts", import.meta.url), "utf8");
+source += readFileSync(new URL("../src/answerIssue.ts", import.meta.url), "utf8")
+  .replace('import { classifyAnswer, normalizeAnswer, type Question } from "./questions";', "");
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
-const { QUESTION_BANK, classifyAnswer, isCorrect } = await import(
+const { QUESTION_BANK, classifyAnswer, isCorrect, practicalHintBones, allBlanksFilled, answerIssue } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 const named = (highlight) => QUESTION_BANK.find(
@@ -32,7 +42,7 @@ test("short names require their complete anatomical names", () => {
     ["Vertebra_L3", "lombar", "vértebra lombar"],
     ["sacrum", "sacro", "osso sacro"],
     ["Coccyx", "cóccix", "osso cóccix"],
-    ["Atlas", "atlas", "primeira vértebra cervical"],
+    ["Atlas", "atlas", "vértebra cervical atlas"],
   ]) {
     const question = named(highlight);
     assert.equal(classifyAnswer(question, short), "incomplete", short);
@@ -83,8 +93,8 @@ test("number identification and complete phrases retain exact correction", () =>
 });
 
 test("named cervical vertebrae accept their complete alternative names", () => {
-  assert.equal(classifyAnswer(named("Atlas"), "Vertebra Atlas"), "correct");
-  assert.equal(classifyAnswer(named("Axis"), "Vértebra áxis"), "correct");
+  assert.equal(classifyAnswer(named("Atlas"), "Vertebra Atlas"), "incomplete");
+  assert.equal(classifyAnswer(named("Axis"), "Vértebra áxis"), "incomplete");
   assert.equal(classifyAnswer(named("Atlas"), "Atlas"), "incomplete");
   assert.equal(classifyAnswer(named("Axis"), "Áxis"), "incomplete");
 });
@@ -103,5 +113,164 @@ test("identification has at least five alternatives and preserves its answer aft
     const namedQuestion = QUESTION_BANK[index + 1];
     assert.equal(markers[Number(question.answer) - 1], namedQuestion.highlight);
     assert.equal(question.markerNames[Number(question.answer) - 1], namedQuestion.answer);
+  }
+});
+
+const simulated = (number) => QUESTION_BANK.find((question) => question.sourceNumber === number);
+
+test("the imported simulation contains all 70 questions with unique IDs", () => {
+  assert.equal(QUESTION_BANK.length, 93);
+  assert.equal(new Set(QUESTION_BANK.map((question) => question.id)).size, 93);
+  for (let number = 1; number <= 70; number++) assert(simulated(number));
+});
+
+test("multiple blanks accept separators and preserve meaningful order", () => {
+  assert.equal(classifyAnswer(simulated(31), "m. subescapular, m. supraespinal, m. redondo menor e m. infraespinal"), "correct");
+  assert.equal(classifyAnswer(simulated(31), "supraespinal; supraespinal; redondo menor; subescapular"), "incorrect");
+  assert.equal(classifyAnswer(simulated(42), "vértebra cervical atlas e vértebra cervical axis"), "correct");
+  assert.equal(classifyAnswer(simulated(42), "vértebra cervical áxis; vértebra cervical atlas"), "incorrect");
+  assert.equal(classifyAnswer(simulated(62), "medial; lateral"), "correct");
+  assert.equal(classifyAnswer(simulated(62), "lateral; medial"), "incorrect");
+  assert.equal(classifyAnswer(simulated(69), "fibular comum e tibial"), "correct");
+  assert.equal(classifyAnswer(simulated(69), "tibial"), "incorrect");
+});
+
+test("open examples accept all four rotator cuff muscles", () => {
+  for (const answer of ["supraespinal", "infraespinal", "redondo menor", "subescapular"])
+    assert.equal(classifyAnswer(simulated(51), `m. ${answer}`), "correct");
+  assert.equal(classifyAnswer(simulated(51), "redondo maior"), "incorrect");
+});
+
+test("muscle blanks require full names and accept singular abbreviations", () => {
+  for (const [number, name] of [[33, "reto femoral"], [35, "sóleo"],
+    [37, "gastrocnêmio"], [51, "supraespinal"], [53, "sóleo"], [60, "vasto lateral"]]) {
+    const question = simulated(number);
+    assert.equal(classifyAnswer(question, name), "incomplete");
+    assert.equal(classifyAnswer(question, `Músculo ${name}`), "correct");
+    assert.equal(classifyAnswer(question, `m. ${name}`), "correct");
+    assert.equal(classifyAnswer(question, `Mm. ${name}`), "incorrect");
+    assert(!/músculos? ____/i.test(question.title));
+  }
+});
+
+test("rotator cuff list accepts a plural prefix or individual singular prefixes", () => {
+  const question = simulated(31);
+  assert.equal(classifyAnswer(question,
+    "Mm. supraespinal, infraespinal, redondo menor e subescapular"), "correct");
+  assert.equal(classifyAnswer(question,
+    "Músculos subescapular; redondo menor; infraespinal; supraespinal"), "correct");
+  assert.equal(classifyAnswer(question,
+    "supraespinal; infraespinal; redondo menor; subescapular"), "incorrect");
+  assert.equal(classifyAnswer(question,
+    "m. supraespinal, infraespinal, redondo menor e subescapular"), "incorrect");
+});
+
+test("practical naming hides descriptive clues and isolates imported bones", () => {
+  for (const question of QUESTION_BANK.filter((item) => item.kind === "name" && item.highlight)) {
+    assert.equal(question.title, "Denomine a estrutura marcada.");
+    assert(question.instruction.includes("massinha azul"));
+    assert(question.explanation.length > 0);
+  }
+  for (const number of [7, 8, 9, 10, 12, 13, 14, 16, 17, 18]) {
+    const question = simulated(number);
+    assert.deepEqual(question.isolatedBones, [question.highlight]);
+  }
+});
+
+test("skull bones remain assembled in practical naming questions", () => {
+  for (const number of [1, 2, 4, 5]) {
+    const question = simulated(number);
+    assert.equal(question.model, "overview-skull-natural");
+    assert.equal(question.isolatedBones, undefined);
+    assert(question.highlight);
+    assert.equal(question.title, "Denomine a estrutura marcada.");
+  }
+});
+
+test("hints add at most two neighbors that exist in the question model", () => {
+  for (const question of QUESTION_BANK) {
+    const neighbors = practicalHintBones(question);
+    assert(neighbors.length <= 2);
+    if (!neighbors.length) continue;
+    assert.equal(question.kind, "name");
+    assert.equal(question.isolatedBones.length, 1);
+    assert(!neighbors.includes(question.highlight));
+    const file = question.model === "spine-practice"
+      ? "pectoral-back-thorax-bones-costal-cart" : "overview-skeleton";
+    const glb = readFileSync(new URL(`../public/${file}.glb`, import.meta.url));
+    const json = JSON.parse(glb.subarray(20, 20 + glb.readUInt32LE(12)).toString());
+    const materials = json.materials.map((material) => material.name.replace(/\.\d+$/, ""));
+    for (const bone of neighbors) assert(materials.includes(bone), `${question.id}: ${bone}`);
+  }
+  for (const number of [1, 2, 4, 5]) assert.deepEqual(practicalHintBones(simulated(number)), []);
+});
+
+test("meninges and brainstem components can be supplied in either order", () => {
+  for (const answer of ["pia-máter; aracnoide-máter", "aracnoide-máter; pia-máter",
+    "pia mater; aracnoide mater"]) {
+    assert.equal(classifyAnswer(simulated(44), answer), "correct");
+  }
+  assert.equal(classifyAnswer(simulated(44), "pia-máter; pia-máter"), "incorrect");
+  assert.equal(classifyAnswer(simulated(45), "bulbo; ponte"), "correct");
+  assert.equal(classifyAnswer(simulated(42), "vértebra cervical áxis; vértebra cervical atlas"), "incorrect");
+  assert.equal(classifyAnswer(simulated(62), "lateral; medial"), "incorrect");
+});
+
+test("inline blank submission requires every field to be filled", () => {
+  assert.equal(allBlanksFilled(simulated(44), ""), false);
+  assert.equal(allBlanksFilled(simulated(44), ";"), false);
+  assert.equal(allBlanksFilled(simulated(44), "pia-máter;"), false);
+  assert.equal(allBlanksFilled(simulated(44), ";aracnoide-máter"), false);
+  assert.equal(allBlanksFilled(simulated(44), "pia-máter;aracnoide-máter"), true);
+  assert.equal(allBlanksFilled(simulated(31), "m. supraespinal;m. infraespinal"), false);
+});
+
+test("feedback identifies a missing muscle prefix and missing anatomical qualifiers", () => {
+  assert.match(answerIssue(simulated(33), "reto femoral"), /Faltou a palavra “músculo”/);
+  assert.match(answerIssue(simulated(33), "músculo reto"), /“femoral”/);
+  assert.match(answerIssue(simulated(34), "músculo quadríceps"), /“femoral”/);
+  assert.equal(answerIssue(simulated(33), "m. reto femoral"), "");
+  assert.match(answerIssue(simulated(33), "músculo sóleo"), /não corresponde/);
+  assert.match(answerIssue(named("Vertebra_C4"), "vértebra cervical"), /“típica”/);
+});
+
+test("feedback identifies missing list components, repeated terms and swapped associations", () => {
+  assert.match(answerIssue(simulated(44), "pia-máter"), /aracnoide/);
+  assert.match(answerIssue(simulated(44), "pia-máter; pia-máter"), /aracnoide/);
+  assert.equal(answerIssue(simulated(44), "pia-máter; aracnoide-máter"), "");
+  assert.match(answerIssue(simulated(42), "vértebra cervical áxis; vértebra cervical atlas"), /lacunas trocadas/);
+  assert.match(answerIssue(simulated(31),
+    "supraespinal; m. infraespinal; m. redondo menor; m. subescapular"), /Faltou a palavra “músculo”/);
+  assert.match(answerIssue(simulated(31), "m. supraespinal; m. infraespinal"), /redondo menor/);
+});
+
+test("atlas requires its full anatomical name throughout the bank", () => {
+  for (const question of [named("Atlas"), simulated(7), simulated(58)]) {
+    assert.equal(question.answer, "Vértebra cervical atlas");
+    assert.equal(classifyAnswer(question, "Vertebra cervical atlas"), "correct");
+    assert.equal(classifyAnswer(question, "atlas"), "incomplete");
+    assert.equal(classifyAnswer(question, "vértebra atlas"), "incomplete");
+    assert.match(answerIssue(question, "atlas"), /vértebra cervical/i);
+  }
+  for (const number of [42, 43, 61]) {
+    assert.equal(classifyAnswer(simulated(number), "vértebra cervical atlas; vértebra cervical áxis"), "correct");
+    assert.notEqual(classifyAnswer(simulated(number), "atlas; áxis"), "correct");
+    assert.match(answerIssue(simulated(number), "atlas; áxis"), /vértebra cervical/i);
+  }
+});
+
+test("axis requires its full anatomical name in every naming and completion question", () => {
+  for (const question of [named("Axis"), simulated(8), simulated(59)]) {
+    assert.equal(question.answer, "Vértebra cervical áxis");
+    assert.equal(classifyAnswer(question, "Vertebra cervical axis"), "correct");
+    for (const short of ["axis", "áxis", "vértebra áxis", "C2"])
+      assert.equal(classifyAnswer(question, short), "incomplete");
+    assert.match(answerIssue(question, "axis"), /vértebra cervical/i);
+  }
+  for (const number of [42, 43, 61]) {
+    assert.equal(classifyAnswer(simulated(number),
+      "vértebra cervical atlas; vértebra cervical axis"), "correct");
+    assert.notEqual(classifyAnswer(simulated(number), "vértebra cervical atlas; axis"), "correct");
+    assert.match(answerIssue(simulated(number), "vértebra cervical atlas; axis"), /vértebra cervical/i);
   }
 });
