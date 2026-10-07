@@ -21,7 +21,7 @@ export function SelectionFeedback({
     ? correct
       ? "Sua resposta está correta"
       : "Sua escolha"
-    : "Osso selecionado no modelo";
+    : "Estrutura selecionada no modelo";
 
   return (
     <div

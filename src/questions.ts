@@ -2,6 +2,7 @@ import { SIMULADO_PART_1 } from "./simuladoPart1";
 import { SIMULADO_PART_2 } from "./simuladoPart2";
 import { SIMULADO_PART_3 } from "./simuladoPart3";
 import type { ModelId } from "./models";
+import { createMuscleQuestions, muscleNamingQuestion } from "./muscles";
 
 export const MARKER_BONES = [
   "Frontal bone",
@@ -175,7 +176,8 @@ export const QUESTION_BANK: Question[] = [...rawQuestions.map<Question>((questio
   id: `question-${index + 1}`,
   category: question.model?.startsWith("spine-") ? "spine"
     : question.model === "thorax-practice" ? "thorax" : "skull",
-})), ...SIMULADO_PART_1, ...SIMULADO_PART_2, ...SIMULADO_PART_3].map(practicalQuestion);
+})), ...SIMULADO_PART_1, ...SIMULADO_PART_2, ...SIMULADO_PART_3,
+...createMuscleQuestions()].map(muscleNamingQuestion).map(practicalQuestion);
 
 export type TestConfig = {
   category: Category | "all";

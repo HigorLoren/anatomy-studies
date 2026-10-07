@@ -13,6 +13,19 @@ async function loadModule(file) {
   let { outputText } = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
   });
+  if (outputText.includes('from "../muscles"')) {
+    const catalog = ts.transpileModule(readFileSync(new URL("../src/muscles.ts", import.meta.url), "utf8"), {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+    }).outputText;
+    outputText = outputText.replace('from "../muscles"',
+      `from "data:text/javascript;base64,${Buffer.from(catalog).toString("base64")}"`);
+  }
+  if (outputText.includes('import { visibleSurfaceAnchor } from "./surfaceAnchor";')) {
+    const module = await loadModule("../src/viewer/surfaceAnchor.ts");
+    globalThis.anatomyTestVisibleSurfaceAnchor = module.visibleSurfaceAnchor;
+    outputText = outputText.replace('import { visibleSurfaceAnchor } from "./surfaceAnchor";',
+      'const visibleSurfaceAnchor = globalThis.anatomyTestVisibleSurfaceAnchor;');
+  }
   outputText = outputText.replace('import { materialKey } from "./bones";',
     'const materialKey = (name) => name.replace(/\\.\\d+$/, "");');
   outputText = outputText.replace(/from "(@babylonjs[^"\n]+)"/g,
@@ -21,6 +34,101 @@ async function loadModule(file) {
 }
 const { mirrorRightGroups } = await loadModule("../src/viewer/mirrorRightGroups.ts");
 const { createIsolatedBones } = await loadModule("../src/viewer/isolatedBones.ts");
+const { prepareMuscleMeshes, applyMuscleLayer } = await loadModule("../src/viewer/muscleMeshes.ts");
+
+test("muscles sharing textures are selected by anatomical node and all heads stay together", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const shared = new PBRMaterial("Muscle basic", scene);
+    const heads = ["Long head of biceps brachii.r", "Short head of biceps brachii.r"]
+      .map((name, index) => {
+        const node = new TransformNode(name, scene);
+        const mesh = CreateBox(`${name}_primitive0`, { size: 1 }, scene);
+        mesh.parent = node;
+        mesh.position.y = index * 2;
+        mesh.material = shared;
+        return mesh;
+      });
+    const other = CreateBox("Infraspinatus muscle.r", { size: 1 }, scene);
+    other.material = shared;
+    const bone = CreateBox("humerus.r", { size: 1 }, scene);
+    bone.material = new PBRMaterial("humerus", scene);
+    const deltoid = CreateBox("Deltoid muscle.r", { size: 1 }, scene);
+    deltoid.material = shared;
+    const fascia = CreateBox("fascia", { size: 1 }, scene);
+    fascia.material = new PBRMaterial("Fascia", scene);
+    const cutBones = ["Atlas.001", "Axis.001", "Vertebra_C7.001", "Vertebra_L3", "T8", "T9",
+      "sternum.001", "Body of sternum.001", "Xiphoid process", "sacrum", "Coccyx",
+      "Rib (1st).r", "Rib (12th).r", "Costal cart of 1st.rib.r",
+      "10th rib art cart of head.r", "annulus fibrosus C2 C3", "Nucleus pulposus T1-L1",
+      "Vertebra L3 art cart.", "art cart of Atlas  C1", "art cart of sacrum lumbosacral joint",
+      "Disc", "Disc.001", "Bursae"]
+      .map((name) => {
+        const mesh = CreateBox(name, { size: 1 }, scene);
+        mesh.material = new PBRMaterial(name, scene);
+        return mesh;
+      });
+    const scapula = CreateBox("Scapula.r", { size: 1 }, scene);
+    scapula.material = new PBRMaterial("Scapula.001", scene);
+    const cartilage = CreateBox("Articular cartilage of glenohumeral joint on scapula.r",
+      { size: 1 }, scene);
+    cartilage.material = new PBRMaterial("Articular cartilage", scene);
+    const meshes = [...heads, other, bone, deltoid, fascia, scapula, cartilage, ...cutBones];
+    const originalPositions = meshes.map((mesh) => mesh.position.clone());
+    prepareMuscleMeshes("upper-muscles-practice", meshes);
+    assert.equal(bone.isDisposed(), false);
+    assert(fascia.isDisposed());
+    assert(cutBones.every((mesh) => mesh.isDisposed()));
+    assert.equal(scapula.isDisposed(), false);
+    assert.equal(cartilage.isDisposed(), false);
+    assert.equal(shared.name, "Muscle basic");
+    assert.equal(heads[0].material, heads[1].material);
+    assert.notEqual(heads[0].material, other.material);
+    applyMuscleLayer(meshes, true);
+    assert(heads.every((mesh) => mesh.isEnabled()));
+    assert(other.isEnabled());
+    assert(bone.isEnabled());
+    assert.equal(deltoid.isEnabled(), false);
+    assert.equal(heads[1].position.y - heads[0].position.y, 2);
+    applyMuscleLayer(meshes, false);
+    assert(deltoid.isEnabled());
+    meshes.forEach((mesh, index) => assert(mesh.position.equals(originalPositions[index])));
+  } finally {
+    scene.dispose();
+    engine.dispose();
+  }
+});
+
+test("deep muscle exposure removes its covers without removing other regional muscles", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const names = ["Rectus femoris.r", "Vastus intermedius muscle.r", "Soleus muscle.r",
+      "Lateral head of gastrocnemius.r", "Medial head of gastrocnemius.r", "Sartorius muscle.r"];
+    const meshes = names.map((name) => {
+      const mesh = CreateBox(name, { size: 1 }, scene);
+      mesh.material = new PBRMaterial("Muscle tile plain", scene);
+      return mesh;
+    });
+    prepareMuscleMeshes("lower-muscles-practice", meshes);
+    applyMuscleLayer(meshes, true, "Vastus intermedius");
+    assert.equal(meshes[0].isEnabled(), false);
+    assert(meshes.slice(1).every((mesh) => mesh.isEnabled()));
+    applyMuscleLayer(meshes, true, "Soleus");
+    assert(meshes[0].isEnabled());
+    assert(meshes[1].isEnabled());
+    assert(meshes[2].isEnabled());
+    assert.equal(meshes[3].isEnabled(), false);
+    assert.equal(meshes[4].isEnabled(), false);
+    assert(meshes[5].isEnabled());
+    applyMuscleLayer(meshes, false, "Soleus");
+    assert(meshes.every((mesh) => mesh.isEnabled()));
+  } finally {
+    scene.dispose();
+    engine.dispose();
+  }
+});
 
 test("mirrored geometry participates in isolation and only the selected side remains visible", () => {
   const engine = new NullEngine();
@@ -80,6 +188,75 @@ const { visibleSurfaceAnchor } = await loadModule("../src/viewer/surfaceAnchor.t
 const { practiceView } = await loadModule("../src/viewer/practiceView.ts");
 const { ArcRotateCamera } = await import("@babylonjs/core/Cameras/arcRotateCamera.js");
 const { Vector3 } = await import("@babylonjs/core/Maths/math.vector.js");
+const { createMusclePins } = await loadModule("../src/viewer/musclePins.ts");
+
+test("muscle pins stay on the same surface through orbit and answer updates", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2,
+      10, Vector3.Zero(), scene);
+    const muscle = CreateBox("muscle", { size: 2 }, scene);
+    muscle.material = new PBRMaterial("Teres minor", scene);
+    const pins = createMusclePins(scene, camera);
+    pins.configure(["Teres minor"]);
+    const original = pins.point("Teres minor").clone();
+    const normal = pins.surface("Teres minor").normal.clone();
+    assert(normal.equalsWithEpsilon(Vector3.Forward()), "surface normal faces outward");
+    assert(Math.abs(original.z - 1) < 0.001, "pin must touch the muscle face");
+    camera.alpha = Math.PI / 4;
+    camera.getViewMatrix(true);
+    assert(pins.point("Teres minor").equalsWithEpsilon(original));
+    pins.configure(["Teres minor"]);
+    assert(pins.point("Teres minor").equalsWithEpsilon(original));
+    camera.alpha = -Math.PI / 2;
+    camera.getViewMatrix(true);
+    assert(pins.point("Teres minor").equalsWithEpsilon(original),
+      "surface anchor stays fixed behind its muscle");
+    camera.alpha = Math.PI / 2;
+    camera.getViewMatrix(true);
+    assert(pins.point("Teres minor").equalsWithEpsilon(original));
+    const cover = CreateBox("cover", { size: 2 }, scene);
+    cover.position.z = 3;
+    cover.computeWorldMatrix(true);
+    pins.configure(["Teres minor"]);
+    assert(pins.point("Teres minor").equalsWithEpsilon(original),
+      "covering pieces cannot relocate the surface anchor");
+    assert(pins.surface("Teres minor").normal.equalsWithEpsilon(normal));
+    muscle.rotation.y = Math.PI / 2;
+    assert(pins.surface("Teres minor").normal.equalsWithEpsilon(Vector3.Right()),
+      "number orientation follows the muscle face");
+    muscle.setEnabled(false);
+    assert.equal(pins.point("Teres minor"), undefined, "removed muscles have no number");
+  } finally {
+    scene.dispose();
+    engine.dispose();
+  }
+});
+
+test("muscle identification starts from a view where the requested target is exposed", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2,
+      10, Vector3.Zero(), scene);
+    const target = CreateBox("Teres minor muscle.r", { size: 2 }, scene);
+    target.material = new PBRMaterial("Teres minor", scene);
+    target.metadata = { muscleTarget: true };
+    const cover = CreateBox("cover", { width: 4, height: 4, depth: 0.3 }, scene);
+    cover.position.z = 3;
+    target.computeWorldMatrix(true);
+    cover.computeWorldMatrix(true);
+    assert.equal(visibleSurfaceAnchor(scene, target, camera), undefined);
+    practiceView(camera, scene, { muscleTarget: "Teres minor", exposeDeepMuscles: true });
+    assert(visibleSurfaceAnchor(scene, target, camera));
+    assert.equal(target.isEnabled(), true);
+    assert.equal(cover.isEnabled(), true, "camera orientation preserves the surrounding anatomy");
+  } finally {
+    scene.dispose();
+    engine.dispose();
+  }
+});
 
 test("clay anchor uses a visible external surface and rejects a covered bone", () => {
   const engine = new NullEngine();
@@ -234,5 +411,75 @@ test("switching away from a special bone restores the original camera controls",
   } finally {
     scene.dispose();
     engine.dispose();
+  }
+});
+
+const { surfaceNumberRotation } = await loadModule("../src/viewer/surfaceNumbers.ts");
+const { Matrix } = await import("@babylonjs/core/Maths/math.vector.js");
+test("number plates face outward along the muscle normal, including near vertical faces", () => {
+  for (const normal of [Vector3.Forward(), Vector3.Right(), Vector3.Up(),
+    new Vector3(1, 2, 3).normalize()]) {
+    const rotation = Matrix.Identity();
+    surfaceNumberRotation(normal).toRotationMatrix(rotation);
+    const plateFront = Vector3.TransformNormal(new Vector3(0, 0, -1), rotation);
+    assert(plateFront.equalsWithEpsilon(normal), "front face must point away from the muscle");
+  }
+});
+
+const { preparedMuscleFile } = await loadModule("../src/muscles.ts");
+test("muscle questions choose exported GLBs for their prepared and restored layers", () => {
+  assert.equal(preparedMuscleFile("upper-muscles-practice", "Supraspinatus"),
+    "upper-muscles-prepared");
+  assert.equal(preparedMuscleFile("upper-muscles-practice", "Supraspinatus", false),
+    "upper-muscles-uncovered-base");
+  assert.equal(preparedMuscleFile("lower-muscles-practice", "Vastus intermedius"),
+    "lower-muscles-vastus-intermedius");
+  assert.equal(preparedMuscleFile("lower-muscles-practice", "Soleus"), "lower-muscles-soleus");
+  assert.equal(preparedMuscleFile("lower-muscles-practice", "Soleus", false),
+    "lower-muscles-prepared");
+  assert.equal(preparedMuscleFile("lower-muscles-practice", "Vastus lateralis"),
+    "lower-muscles-prepared");
+});
+
+test("muscle numbers choose an exposed face when the initial side is covered", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2,
+      10, Vector3.Zero(), scene);
+    const muscle = CreateBox("muscle", { size: 2 }, scene);
+    muscle.material = new PBRMaterial("Supraspinatus", scene);
+    const cover = CreateBox("cover", { width: 8, height: 8, depth: 0.5 }, scene);
+    cover.position.z = 3;
+    cover.computeWorldMatrix(true);
+    const pins = createMusclePins(scene, camera);
+    pins.configure(["Supraspinatus"], 1);
+    const surface = pins.surface("Supraspinatus");
+    assert(surface, "an exposed face must be found by looking beyond the initial view");
+    assert(surface.normal.z < 0.5, "the number must not be placed facing the covering piece");
+    const point = surface.point.clone();
+    camera.alpha += Math.PI;
+    camera.getViewMatrix(true);
+    assert(pins.point("Supraspinatus").equalsWithEpsilon(point),
+      "the chosen exposed face stays fixed during rotation");
+  } finally {
+    scene.dispose(); engine.dispose();
+  }
+});
+
+test("numbers shrink to fit narrow exposed muscle faces", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2,
+      10, Vector3.Zero(), scene);
+    const muscle = CreateBox("narrow muscle", { width: 0.035, height: 0.2, depth: 0.035 }, scene);
+    muscle.material = new PBRMaterial("Supraspinatus", scene);
+    const pins = createMusclePins(scene, camera);
+    pins.configure(["Supraspinatus"], 1);
+    assert.equal(pins.surface("Supraspinatus").sizeScale, 0.4,
+      "the number circle must fit the exposed surface instead of being cut off");
+  } finally {
+    scene.dispose(); engine.dispose();
   }
 });

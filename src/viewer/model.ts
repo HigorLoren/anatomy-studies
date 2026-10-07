@@ -13,8 +13,10 @@ import { createVertebraAppearance } from "./vertebraAppearance";
 import { createPaintMaterials } from "./paintMaterials";
 import { mirrorRightGroups } from "./mirrorRightGroups";
 import { createIsolatedBones } from "./isolatedBones";
+import { applyMuscleLayer, prepareMuscleMeshes } from "./muscleMeshes";
 import { SPINE_PIECES, type ModelId } from "../models";
 import { materialKey } from "./bones";
+import { preparedMuscleFile } from "../muscles";
 import type { Exercise, ViewerStatus } from "./types";
 
 const NATURAL_MODEL = "overview-skull-natural";
@@ -38,14 +40,19 @@ export function createModelLoader(options: Options) {
   let replacements = new Map<string, PBRMaterial>();
   let currentNodes: Node[] = [];
   let loadId = 0;
+  let activeModel: ModelId | undefined;
+  let activeFile = "";
   let layoutSignature = "";
   let arrange: ((keys: string[], preserveLayout?: boolean) => void) | undefined;
 
   const load = async (
     model: ModelId,
     clearSelection: () => void,
+    requestedExercise: Exercise = options.getExercise(),
   ) => {
     const requestId = ++loadId;
+    const sourceFile = modelFile(model, requestedExercise);
+    activeModel = model; activeFile = sourceFile;
     const natural = model === NATURAL_MODEL;
     replacements = new Map();
 
@@ -59,7 +66,7 @@ export function createModelLoader(options: Options) {
 
       if (requestId !== loadId) return;
 
-      const imported = await importPracticeModel(model, scene);
+      const imported = await importPracticeModel(model, scene, sourceFile);
 
       if (requestId !== loadId) {
         return dispose([...imported.meshes, ...imported.transformNodes]);
@@ -67,10 +74,7 @@ export function createModelLoader(options: Options) {
 
       filterPracticeMeshes(model, imported.meshes);
       vertebraAppearance.apply(imported.meshes, usesBoneTexture(model));
-      const nodes = mirrorRightGroups(imported.transformNodes, [
-        ...imported.meshes,
-        ...imported.transformNodes,
-      ], imported.meshes);
+      const nodes = practiceNodes(model, imported.meshes, imported.transformNodes);
 
       clearSelection();
       dispose(currentNodes);
@@ -78,8 +82,7 @@ export function createModelLoader(options: Options) {
       arrange = usesIsolatedBones(model)
         ? createIsolatedBones(imported.meshes.filter((mesh) => !mesh.isDisposed()))
         : undefined;
-      const display: Exercise = model === "spine-pieces"
-        ? { isolatedBones: SPINE_PIECES } : options.getExercise();
+      const display = displayExercise(model, options.getExercise());
       const keys = display?.isolatedBones;
       if (keys?.length) {
         arrange?.(keys, preservesLayout(display));
@@ -105,6 +108,10 @@ export function createModelLoader(options: Options) {
     },
     get naturalMaterials() { return replacements; },
     arrangeExercise(value: Exercise) {
+      if (activeModel && modelFile(activeModel, value) !== activeFile) {
+        void load(activeModel, () => {}, value);
+        return;
+      }
       if (!arrange || !value?.isolatedBones?.length) return;
       const nextSignature = layoutKey(value.isolatedBones, value.preserveLayout);
       if (layoutSignature === nextSignature) return;
@@ -131,6 +138,8 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
     setModel,
   } = options;
 
+  applyMuscleLayer(scene.meshes, exercise?.exposeDeepMuscles ?? false, exercise?.muscleTarget);
+
   const geometry = scene.meshes.filter((mesh) =>
     mesh.getTotalVertices() > 0 && mesh.isEnabled() && !mesh.metadata?.practiceMarker,
   );
@@ -138,7 +147,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   if (!geometry.length) {
     throw new Error("O arquivo não contém geometria visível.");
   }
-  const [min, max] = bounds(geometry);
+  const [min, max] = practiceBounds(geometry, exercise);
   const radius = max.subtract(min).length() / 2;
 
   fill.intensity = natural ? 0.8 : 1;
@@ -177,13 +186,21 @@ function bounds(meshes: Scene["meshes"]) {
   return [min, max];
 }
 
+function practiceBounds(geometry: Scene["meshes"], exercise: Exercise) {
+  const regionalMuscles = geometry.filter((mesh) => mesh.metadata?.muscleTarget);
+  return bounds(exercise?.muscleTarget && regionalMuscles.length ? regionalMuscles : geometry);
+}
+
 function dispose(nodes: Node[]) {
   for (const node of nodes) {
     if (!node.isDisposed()) node.dispose();
   }
 }
 
-function modelFile(model: ModelId) {
+function modelFile(model: ModelId, exercise: Exercise) {
+  if (model.endsWith("-muscles-practice")) {
+    return preparedMuscleFile(model, exercise?.muscleTarget, exercise?.exposeDeepMuscles ?? true);
+  }
   if (model.endsWith("-limb-practice")) return "overview-skeleton";
   if (model === "skeleton-practice" || model === "spine-pieces" || model === "spine-cervical-practice") return "overview-skeleton";
   if (model === "spine-practice" || model === "thorax-practice") {
@@ -192,7 +209,16 @@ function modelFile(model: ModelId) {
   return model;
 }
 
+function practiceNodes(model: ModelId, meshes: Scene["meshes"], groups: Scene["transformNodes"]) {
+  const nodes = [...meshes, ...groups];
+  return model.endsWith("-muscles-practice") ? nodes : mirrorRightGroups(groups, nodes, meshes);
+}
+
 function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {
+  if (model.endsWith("-muscles-practice")) {
+    prepareMuscleMeshes(model, meshes);
+    return;
+  }
   if (model.endsWith("-limb-practice")) {
     filterLimbMeshes(model, meshes);
     return;
@@ -207,9 +233,9 @@ function filterPracticeMeshes(model: ModelId, meshes: Scene["meshes"]) {
   }
 }
 
-async function importPracticeModel(model: ModelId, scene: Scene) {
+async function importPracticeModel(model: ModelId, scene: Scene, sourceFile: string) {
   const primary = await ImportMeshAsync(
-    `${import.meta.env.BASE_URL}${modelFile(model)}.glb`, scene,
+    `${import.meta.env.BASE_URL}${sourceFile}.glb`, scene,
   );
   if (model !== "spine-practice") return primary;
   try {
@@ -270,4 +296,8 @@ function preservesLayout(exercise: Exercise) {
 
 function separatedGroup(exercise: Exercise) {
   return (exercise?.isolatedBones?.length ?? 0) > 1 && !preservesLayout(exercise);
+}
+
+function displayExercise(model: ModelId, exercise: Exercise): Exercise {
+  return model === "spine-pieces" ? { isolatedBones: SPINE_PIECES } : exercise;
 }

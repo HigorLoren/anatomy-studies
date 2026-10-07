@@ -5,6 +5,8 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { Scene } from "@babylonjs/core/scene";
 import { visibleSurfaceAnchor } from "./surfaceAnchor";
 import { createClayMarker } from "./clayMarker";
+import { createMusclePins } from "./musclePins";
+import { createSurfaceNumbers } from "./surfaceNumbers";
 import { materialKey } from "./bones";
 import type { Exercise, Marker } from "./types";
 
@@ -24,6 +26,8 @@ export function createMarkers({
   onMarkers,
 }: Options) {
   const anchors = new Map<string, Vector3>();
+  const musclePins = createMusclePins(scene, camera);
+  const surfaceNumbers = createSurfaceNumbers(scene, musclePins);
   let signature = "";
   let clearClay: (() => void) | undefined;
 
@@ -31,6 +35,10 @@ export function createMarkers({
     clearClay?.();
     clearClay = undefined;
     anchors.clear();
+    const numbers = muscleNumberKeys(exercise);
+    musclePins.configure(numbers, modelRadius);
+    surfaceNumbers.configure(numbers, modelRadius);
+    surfaceNumbers.render();
 
     for (const name of markerTargets(exercise)) {
       const matches = scene.meshes.filter(
@@ -41,15 +49,16 @@ export function createMarkers({
           item.getTotalVertices() > 0,
       );
 
-      const mesh =
-        matches.find((item) => /right|\.r$/.test(item.name)) ?? matches[0];
+      // Um músculo pode ter várias cabeças; marque uma superfície visível do conjunto.
+      const { mesh, surface } = markerSurface(
+        scene, matches, camera, name === exercise?.clayTarget,
+      );
 
       const anchor = mesh && findSurfaceAnchor(scene, mesh, name, modelRadius);
 
       if (anchor) {
         anchors.set(name, anchor);
         if (name === exercise?.clayTarget) {
-          const surface = visibleSurfaceAnchor(scene, mesh!, camera);
           if (surface) {
             clearClay = createClayMarker(scene, surface.point, modelRadius, surface.normal);
           }
@@ -66,8 +75,11 @@ export function createMarkers({
 
     const size = markerSize(canvas, camera, modelRadius);
 
-    const markers = (exercise?.markers ?? []).map((name, index) =>
-      marker(anchors.get(name), index + 1, size, { scene, viewport, engine }),
+    surfaceNumbers.render();
+    const keys = exercise?.muscleTarget ? [] : exercise?.markers ?? [];
+    const markers = keys.map((name, index) =>
+      marker(anchors.get(name),
+      index + 1, size, { scene, viewport, engine }),
     );
 
     const next = JSON.stringify(
@@ -85,6 +97,21 @@ export function createMarkers({
   };
 
   return { configure, render };
+}
+
+function markerSurface(
+  scene: Scene, meshes: Scene["meshes"], camera: ArcRotateCamera, clay: boolean,
+) {
+  if (clay) {
+    for (const mesh of meshes) {
+      const surface = visibleSurfaceAnchor(scene, mesh, camera);
+      if (surface) return { mesh, surface };
+    }
+  }
+  return {
+    mesh: meshes.find((item) => /right|\.r$/.test(item.name)) ?? meshes[0],
+    surface: undefined,
+  };
 }
 
 function findSurfaceAnchor(
@@ -162,4 +189,8 @@ function markerSize(
 
 function markerTargets(exercise: Exercise) {
   return exercise?.clayTarget ? [exercise.clayTarget] : exercise?.markers ?? [];
+}
+
+function muscleNumberKeys(exercise: Exercise) {
+  return exercise?.muscleTarget ? exercise.markers ?? [] : [];
 }

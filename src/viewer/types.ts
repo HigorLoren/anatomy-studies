@@ -17,6 +17,8 @@ export type Exercise = {
   clayTarget?: string;
   isolatedBones?: string[];
   preserveLayout?: boolean;
+  exposeDeepMuscles?: boolean;
+  muscleTarget?: string;
   highlight?: string;
   highlightColor?: "blue" | "red" | "green";
   correctHighlight?: string;

@@ -11,6 +11,8 @@ export type ModelId =
   | (typeof MODELS)[number]["value"]
   | "spine-cervical-practice"
   | "skeleton-practice"
+  | "upper-muscles-practice"
+  | "lower-muscles-practice"
   | "upper-limb-practice"
   | "lower-limb-practice";
 export const DEFAULT_MODEL: ModelId = "overview-skull-natural";

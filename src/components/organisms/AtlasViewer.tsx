@@ -53,10 +53,7 @@ export function AtlasViewer({
   useEffect(() => {
     viewerRef.current = createViewer(
       canvasRef.current!,
-      (value) => {
-        setStatus(value);
-        onStatus(value);
-      },
+      (value) => { setStatus(value); onStatus(value); },
       setBone,
       setMarkers,
       (number) => {

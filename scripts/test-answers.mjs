@@ -4,6 +4,8 @@ import { test } from "node:test";
 import ts from "typescript";
 
 let source = readFileSync(new URL("../src/questions.ts", import.meta.url), "utf8");
+source = source.replace('import { createMuscleQuestions, muscleNamingQuestion } from "./muscles";',
+  readFileSync(new URL("../src/muscles.ts", import.meta.url), "utf8"));
 for (let part = 1; part <= 3; part++) {
   source = source.replace(
     `import { SIMULADO_PART_${part} } from "./simuladoPart${part}";`,
@@ -17,7 +19,8 @@ source += readFileSync(new URL("../src/answerIssue.ts", import.meta.url), "utf8"
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
-const { QUESTION_BANK, classifyAnswer, isCorrect, practicalHintBones, allBlanksFilled, answerIssue } = await import(
+const { QUESTION_BANK, classifyAnswer, isCorrect, practicalHintBones, allBlanksFilled, answerIssue,
+  MUSCLES, MUSCLE_DISTRACTORS, muscleExposure, questionMuscleTarget } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 const named = (highlight) => QUESTION_BANK.find(
@@ -119,9 +122,61 @@ test("identification has at least five alternatives and preserves its answer aft
 const simulated = (number) => QUESTION_BANK.find((question) => question.sourceNumber === number);
 
 test("the imported simulation contains all 70 questions with unique IDs", () => {
-  assert.equal(QUESTION_BANK.length, 93);
-  assert.equal(new Set(QUESTION_BANK.map((question) => question.id)).size, 93);
+  assert.equal(QUESTION_BANK.length, 115);
+  assert.equal(new Set(QUESTION_BANK.map((question) => question.id)).size, 115);
   for (let number = 1; number <= 70; number++) assert(simulated(number));
+});
+
+test("muscle identification and naming use verified GLB nodes, including all heads", () => {
+  for (const model of ["upper", "lower"]) {
+    const buffer = readFileSync(new URL(`../public/${model}-limb.glb`, import.meta.url));
+    const glb = JSON.parse(buffer.subarray(20, 20 + buffer.readUInt32LE(12)).toString());
+    const modelId = `${model}-muscles-practice`;
+    const muscles = QUESTION_BANK.filter((question) => question.model === modelId);
+    assert.equal(muscles.length, 12);
+    const naming = muscles.filter((question) => question.kind === "name");
+    const identification = muscles.filter((question) => question.kind === "identify");
+    for (const question of identification) {
+      assert.equal(question.markers.length, 6);
+      assert.equal(question.isolatedBones, undefined);
+      const target = question.markers[Number(question.answer) - 1];
+      assert(naming.some((item) => item.highlight === target));
+    }
+    for (const question of naming) {
+      assert.equal(question.isolatedBones, undefined);
+      const parts = question.highlight === "Biceps brachii"
+        ? ["Long head of biceps brachii", "Short head of biceps brachii"]
+        : question.highlight === "Triceps brachii"
+          ? ["Long head of triceps brachii", "Lateral head of triceps brachii", "Medial head of triceps brachii"]
+          : question.highlight === "Gastrocnemius"
+            ? ["Lateral head of gastrocnemius", "Medial head of gastrocnemius"]
+            : [question.highlight + (question.highlight === "Rectus femoris" ? "" : " muscle")];
+      for (const part of parts) {
+        assert(glb.nodes.some((node) => node.name === `${part}.r` && node.mesh !== undefined), part);
+      }
+    }
+  }
+  assert.equal(simulated(29).highlight, "Biceps brachii");
+  assert.equal(simulated(30).highlight, "Triceps brachii");
+  for (const number of [25, 26, 27, 28]) assert.equal(simulated(number).model, undefined);
+});
+
+test("muscle identification keeps six alternatives present in the prepared dissection", () => {
+  for (const question of QUESTION_BANK.filter((item) => item.model?.endsWith("-muscles-practice"))) {
+    const target = questionMuscleTarget(question);
+    assert(target, question.id);
+    const removed = muscleExposure(target);
+    for (const key of question.markers ?? [target]) {
+      const muscle = [...MUSCLES, ...MUSCLE_DISTRACTORS].find((item) => item.key === key);
+      assert(muscle, key);
+      assert(muscle.nodes.every((node) => !removed.includes(node)), `${question.id}: ${key}`);
+    }
+    if (question.kind === "identify") {
+      assert.equal(question.markers.length, 6);
+      assert.equal(question.markerNames[Number(question.answer) - 1], `o músculo ${question.title
+        .replace("Qual número indica o músculo ", "").replace(/\?$/, "")}`);
+    }
+  }
 });
 
 test("multiple blanks accept separators and preserve meaningful order", () => {

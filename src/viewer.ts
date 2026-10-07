@@ -13,8 +13,10 @@ import { focusPiece } from "./viewer/focusPiece";
 import { createExercise } from "./viewer/exercise";
 import { createMarkers } from "./viewer/markers";
 import { createModelLoader } from "./viewer/model";
+import { applyMuscleLayer } from "./viewer/muscleMeshes";
 import type {
   BoneSelection,
+  Exercise,
   Marker,
   Viewer,
   ViewerStatus,
@@ -38,22 +40,14 @@ export function createViewer(
   onNumberSelect: (number: number) => void = () => {},
 ): Viewer {
   const engine = new Engine(canvas, true, { adaptToDeviceRatio: true, limitDeviceRatio: 2 });
-
   const scene = new Scene(engine);
   scene.clearColor = SCENE_COLOR;
-
   const camera = new ArcRotateCamera(
-    "camera",
-    Math.PI / 2.9,
-    Math.PI / 1.8,
-    2.5,
-    Vector3.Zero(),
-    scene,
+    "camera", Math.PI / 2.9, Math.PI / 1.8, 2.5, Vector3.Zero(), scene,
   );
   camera.attachControl(canvas, true);
   const trackball = attachTrackball(canvas, camera);
   camera.useNaturalPinchZoom = true;
-
   const fillLight = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
   fillLight.intensity = 1.5;
   fillLight.groundColor = new Color3(0.12, 0.12, 0.12);
@@ -80,6 +74,7 @@ export function createViewer(
   const exercise = createExercise(scene, onBoneSelect);
 
   const setupExercise = () => {
+    applyExerciseMuscleLayer(scene, exercise.value);
     trackball.setExercise(exercise.value);
     markers.configure(exercise.value, radius);
     exercise.highlight();
@@ -162,6 +157,10 @@ export function createViewer(
       engine.dispose();
     },
   };
+}
+
+function applyExerciseMuscleLayer(scene: Scene, exercise: Exercise) {
+  applyMuscleLayer(scene.meshes, exercise?.exposeDeepMuscles ?? false, exercise?.muscleTarget);
 }
 
 function zoomCamera(camera: ArcRotateCamera, factor: number) {

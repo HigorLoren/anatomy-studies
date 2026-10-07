@@ -34,6 +34,10 @@ export function createExercise(
     materials: Map<string, PBRMaterial>,
     onNumberSelect: (number: number) => void,
   ) => {
+    if (mesh.metadata?.practiceNumber) {
+      onNumberSelect(mesh.metadata.practiceNumber);
+      return;
+    }
     if (!(mesh.material instanceof PBRMaterial)) return;
     if (value) {
       const key = materialKey(mesh.material.name).replace(/[._][lr]$/, "");
