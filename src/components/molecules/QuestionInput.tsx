@@ -22,8 +22,8 @@ export function QuestionInput({
     <>
       <label class="mb-3 block text-sm leading-6 font-medium mt-8" for="answer">
         {complete
-          ? "Os ossos frontal, parietal, temporal e occipital pertencem ao…"
-          : "Nome completo da estrutura"}
+          ? "Termos que completam a frase"
+          : question.kind === "compare" ? "Sua resposta" : "Nome da estrutura"}
       </label>
       <input
         class="font-[inherit] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-h-14 w-full rounded-xl border border-slate-300 bg-white px-4 text-base text-ink"
@@ -34,7 +34,7 @@ export function QuestionInput({
         placeholder={
           complete ? "Complete com o termo anatômico" : "Digite o nome anatômico completo"
         }
-        disabled={checked || (!complete && !viewerReady)}
+        disabled={checked || (Boolean(question.model || question.highlight) && !viewerReady)}
         autoComplete="off"
       />
     </>

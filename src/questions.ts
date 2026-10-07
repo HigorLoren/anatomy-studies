@@ -1,3 +1,6 @@
+import { SIMULADO_PART_1 } from "./simuladoPart1";
+import { SIMULADO_PART_2 } from "./simuladoPart2";
+import { SIMULADO_PART_3 } from "./simuladoPart3";
 import type { ModelId } from "./models";
 
 export const MARKER_BONES = [
@@ -12,6 +15,10 @@ export const CATEGORIES = {
   skull: "Crânio",
   thorax: "Tórax",
   spine: "Coluna vertebral",
+  upper: "Membro superior",
+  lower: "Membro inferior e pelve",
+  abdomen: "Abdome",
+  nervous: "Sistema nervoso",
 } as const;
 export type Category = keyof typeof CATEGORIES;
 
@@ -19,12 +26,15 @@ export const QUESTION_KINDS = {
   identify: "Identificação",
   name: "Denominação",
   complete: "Completar a frase",
+  compare: "Diferenciação",
 } as const;
 
 export type Question = {
   id: string;
   category: Category;
-  kind: "identify" | "name" | "complete";
+  kind: "identify" | "name" | "complete" | "compare";
+  sourceNumber?: number;
+  answerGroups?: string[][];
   title: string;
   instruction: string;
   answer: string;
@@ -82,7 +92,7 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
   },
   {
     kind: "complete",
-    title: "Complete a frase",
+    title: "Os ossos frontal, parietal, temporal e occipital pertencem ao ____.",
     instruction: "Preencha a lacuna com o nome da divisão do crânio.",
     answer: "Neurocrânio",
     accepted: ["neurocrânio"],
@@ -159,12 +169,13 @@ rawQuestions.push({
   explanation: "O corpo do esterno é sua porção intermediária, entre o manúbrio e o processo xifoide.",
 });
 
-export const QUESTION_BANK: Question[] = rawQuestions.map((question, index) => ({
+
+export const QUESTION_BANK: Question[] = [...rawQuestions.map<Question>((question, index) => ({
   ...question,
   id: `question-${index + 1}`,
   category: question.model?.startsWith("spine-") ? "spine"
     : question.model === "thorax-practice" ? "thorax" : "skull",
-}));
+})), ...SIMULADO_PART_1, ...SIMULADO_PART_2, ...SIMULADO_PART_3];
 
 export type TestConfig = {
   category: Category | "all";

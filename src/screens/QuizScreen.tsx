@@ -24,6 +24,7 @@ const questionKinds = {
   complete: "Completar a frase",
   identify: "Identificação",
   name: "Denominação",
+  compare: "Diferenciação",
 };
 
 function getExercise(
@@ -37,7 +38,7 @@ function getExercise(
     isolatedBones: question.isolatedBones,
   };
 
-  if (question.kind === "complete") return null;
+  if (question.kind !== "identify") return null;
 
   const markers = question.markers ?? MARKER_BONES;
   return {
@@ -91,7 +92,8 @@ export function QuizScreen(props: QuizScreenProps) {
           {question.title}
         </h1>
         <p class="text-[14px] text-muted">{question.instruction}</p>
-        {question.kind !== "complete" && (
+        {(question.model || question.kind === "identify" ||
+          (question.kind === "name" && question.highlight)) && (
           <AtlasViewer
             mode="quiz"
             model={question.model ?? DEFAULT_MODEL}

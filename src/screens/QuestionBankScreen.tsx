@@ -43,7 +43,7 @@ export function QuestionBankScreen({ onSelect, onTest }: Props) {
                   <button class="w-full rounded-xl border border-slate-200 p-4 text-left hover:border-accent"
                     onClick={() => onSelect(question.id)}>
                     <span class="block text-xs text-muted">
-                      Questão {question.id.replace("question-", "")} · {QUESTION_KINDS[question.kind]}
+                      Questão {question.sourceNumber ? `${question.sourceNumber} do simulado` : question.id.replace("question-", "")} · {QUESTION_KINDS[question.kind]}
                     </span>
                     <span class="mt-1 block">{question.title}</span>
                   </button>

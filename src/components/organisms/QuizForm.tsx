@@ -33,7 +33,7 @@ export function QuizForm({
   onCheck,
 }: QuizFormProps) {
   const identify = question.kind === "identify";
-  const complete = question.kind === "complete";
+  const complete = isWrittenQuestion(question);
   const viewerReady = status === "ready";
   const canSubmit = answer.trim() && (complete || viewerReady);
   const hint = checked
@@ -96,4 +96,8 @@ export function QuizForm({
       <p class="mt-4 text-xs leading-5 text-muted">{hint}</p>
     </>
   );
+}
+
+function isWrittenQuestion(question: Question) {
+  return question.kind !== "identify" && !question.model && !question.highlight;
 }
