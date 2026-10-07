@@ -44,12 +44,16 @@ const SUPERFICIAL_COVERS = [
 
 export function isStudyObstruction(model: ModelId, material: string, names: string[]) {
   const key = materialKey(material).replace(/[._][lr]$/, "");
+  if (key === "sacrum") return true;
+  if (model === "upper-muscles-practice" && names.some(name =>
+    /^(clavicle)$|(?:articular cartilage|art cart).*clavicle/i.test(name),
+  )) return true;
   if (isAxialStructure(names)) return true;
   if (/^(Disc|Bursae)$/.test(key)) return true;
   if (/fascia|overlay|sheath|retinaculum|artery|vein|nerves|fat/i.test(material)) return true;
   if (/^(Atlas|Axis|Vertebra_[CTL]\d+|[CTL]\d+)$/.test(key)) return true;
   return model === "upper-muscles-practice" &&
-    ["sternum", "Body of sternum", "Xiphoid process", "sacrum", "Coccyx"].includes(key);
+    ["sternum", "Body of sternum", "Xiphoid process", "clavicle", "Coccyx"].includes(key);
 }
 
 function isAxialStructure(names: string[]) {
@@ -58,8 +62,10 @@ function isAxialStructure(names: string[]) {
   const vertebralCart = /^Vertebra [CTL]\d+ art cart|art cart of (Atlas|Axis)/i;
   const centralJoints =
     /sacrum (art process|lumbosacral joint)|sternoclavicular joint on manubrium/i;
+  const sacralCartilage = /(?:art cart|articular cartilage).*on sacrum/i;
   return names.some((name) =>
-    ribsAndDiscs.test(name) || vertebralCart.test(name) || centralJoints.test(name),
+    ribsAndDiscs.test(name) || vertebralCart.test(name)
+      || centralJoints.test(name) || sacralCartilage.test(name),
   );
 }
 

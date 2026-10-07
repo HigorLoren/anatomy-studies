@@ -39,6 +39,20 @@ for (const [originalName, preparedName, covers] of variants) {
     assert(binary.length < source.binary.length / 2, "unused geometry and textures are pruned");
     const nodes = doc.nodes.map(node => node.name ?? "");
     assert(!nodes.some(name => covers.test(name)), "covering pieces must be physically absent");
+    assert(!doc.materials.some(material => /^sacrum(?:\.\d+)?$/.test(material.name)),
+      "sacrum must be physically absent from every muscle view");
+    assert(!nodes.some(name => /(?:art cart|articular cartilage).*on sacrum/i.test(name)),
+      "cartilage on removed sacrum must also be absent");
+    if (originalName === "upper-limb") {
+      assert(!doc.materials.some(material => /^clavicle(?:\.\d+)?$/.test(material.name)),
+        "clavicle must be absent from prepared and covered upper muscle views");
+      assert(!nodes.some(name => /(?:art cart|articular cartilage).*clavicle/i.test(name)),
+        "cartilage on removed clavicle must also be absent");
+      assert(doc.materials.some(material => /^Scapula(?:\.\d+)?$/.test(material.name)));
+    } else {
+      assert(doc.materials.some(material => /^Hip bone(?:\.\d+)?$/.test(material.name)),
+        "hip bones must remain as references");
+    }
     assert(!nodes.some(name => /practice-number|practiceMarker|practice-blue-clay/.test(name)));
     assert(!doc.materials.some(material => /^(Bursae|Disc)(\.\d+)?$/.test(material.name)));
     assert(nodes.some(name => /Supraspinatus/.test(name) || /Soleus/.test(name)));
