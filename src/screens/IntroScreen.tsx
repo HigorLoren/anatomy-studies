@@ -12,26 +12,25 @@ export function IntroScreen({ onStart, onBank }: Props) {
   const [count, setCount] = useState(20);
   const available = filterQuestions({ category, kind }).length;
   const total = Math.min(count, available, 20);
-  const field = "mt-2 w-full rounded-xl border border-slate-300 bg-white p-3 text-ink";
+  const field = "mt-2 w-full min-w-0 rounded-xl border border-slate-300 bg-white p-3 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+  const buttonFocus = "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent";
 
   return (
     <>
-      <div class="flex items-center justify-center overflow-hidden rounded-3xl bg-[#0a0d14] p-8">
-        <img class="w-full max-w-110" src={`${import.meta.env.BASE_URL}skull-practice.png`}
-          alt="Crânio humano visto de frente e de lado" />
-      </div>
-      <section>
-        <span class="mb-5 block text-sm font-medium text-accent">Prática de anatomia</span>
-        <h1 class="mb-5 text-4xl font-medium tracking-tight">Monte seu teste</h1>
-        <p class="mb-6 text-muted">
-          Escolha a região e a forma de responder. Cada teste tem até 20 questões,
-          sorteadas de um banco com {QUESTION_BANK.length} perguntas.
-        </p>
-        <form class="space-y-5" onSubmit={(event) => {
+      <section aria-labelledby="test-title" class="min-w-0">
+        <div class="mb-7 max-w-2xl">
+          <h1 id="test-title" class="mb-3 text-3xl font-medium tracking-tight text-ink md:text-4xl">Monte seu teste</h1>
+          <p class="leading-7 text-muted">
+            Escolha a região, o tipo de questão e quantas perguntas quer responder.
+            Cada teste tem até 20 questões sorteadas da base.
+          </p>
+        </div>
+        <form class="rounded-3xl border border-slate-200 bg-white p-5 sm:p-8" onSubmit={(event) => {
           event.preventDefault();
           if (total) onStart({ category, kind, count: total });
         }}>
-          <label class="block text-sm font-medium">Região anatômica
+          <div class="grid gap-5 lg:grid-cols-[1fr_1fr_0.7fr]">
+          <label class="block min-w-0 text-sm font-medium text-ink">Região anatômica
             <select class={field} value={category} onChange={(event) =>
               setCategory(event.currentTarget.value as TestConfig["category"])}>
               <option value="all">Todas as regiões</option>
@@ -39,7 +38,7 @@ export function IntroScreen({ onStart, onBank }: Props) {
                 <option value={value}>{label}</option>)}
             </select>
           </label>
-          <label class="block text-sm font-medium">Tipo de questão
+          <label class="block min-w-0 text-sm font-medium text-ink">Tipo de questão
             <select class={field} value={kind} onChange={(event) =>
               setKind(event.currentTarget.value as TestConfig["kind"])}>
               <option value="all">Teste misto</option>
@@ -47,22 +46,31 @@ export function IntroScreen({ onStart, onBank }: Props) {
                 <option value={value}>{label}</option>)}
             </select>
           </label>
-          <label class="block text-sm font-medium">Máximo de questões
+          <label class="block min-w-0 text-sm font-medium text-ink">Máximo de questões
             <select class={field} value={count}
               onChange={(event) => setCount(Number(event.currentTarget.value))}>
               {[5, 10, 15, 20].map((value) => <option value={value}>{value}</option>)}
             </select>
           </label>
-          <p class="text-sm text-muted" role="status">
-            {available ? `${available} disponíveis · este teste terá ${total} questões.`
+          </div>
+          <div class="mt-7 flex flex-col gap-5 border-t border-slate-200 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <p class="text-sm leading-6 text-muted" role="status" aria-live="polite">
+            {available ? <><span class="font-medium text-ink">{total} questões neste teste.</span><br />{available} disponíveis com os filtros selecionados.</>
               : "Não há perguntas para essa combinação. Escolha outra região ou tipo."}
           </p>
-          <button disabled={!total} class="rounded-xl bg-ink px-5 py-4 text-white disabled:opacity-45">
+          <button type="submit" disabled={!total} class={`${buttonFocus} shrink-0 rounded-xl bg-ink px-7 py-4 font-medium text-white transition-colors hover:bg-accent disabled:cursor-default disabled:opacity-45`}>
             Começar teste
           </button>
+          </div>
         </form>
-        <button onClick={onBank} class="mt-5 rounded-xl border border-slate-300 px-5 py-4 text-accent">
-          Prática livre: escolher qualquer questão
+      </section>
+      <section aria-labelledby="bank-title" class="flex min-w-0 flex-col gap-5 rounded-2xl bg-slate-100 px-5 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div>
+          <h2 id="bank-title" class="mb-1 text-lg font-medium text-ink">Base de perguntas</h2>
+          <p class="max-w-xl text-sm leading-6 text-muted">Explore as {QUESTION_BANK.length} perguntas e escolha uma questão para praticar livremente.</p>
+        </div>
+        <button type="button" onClick={onBank} class={`${buttonFocus} shrink-0 rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium text-accent transition-colors hover:border-accent hover:bg-slate-50`}>
+          Acessar base de perguntas
         </button>
       </section>
     </>

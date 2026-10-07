@@ -63,7 +63,7 @@ function App() {
           mode === "explore"
             ? "pt-6"
             : mode === "intro"
-            ? "pt-6 lg:grid-cols-[1.15fr_1fr]"
+            ? "mx-auto w-full max-w-5xl pt-6 md:pt-12"
             : "mx-auto max-w-3xl sm:pt-3"
         }`}
       >
