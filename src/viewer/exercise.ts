@@ -4,6 +4,7 @@ import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import type { Scene } from "@babylonjs/core/scene";
 import { boneSelection, materialKey } from "./bones";
+import { MUSCLES, MUSCLE_DISTRACTORS } from "../muscles";
 import type { BoneSelection, Exercise } from "./types";
 
 export function createExercise(
@@ -39,7 +40,7 @@ export function createExercise(
       return;
     }
     if (!(mesh.material instanceof PBRMaterial)) return;
-    if (value) {
+    if (value && !value.exploring) {
       const key = materialKey(mesh.material.name).replace(/[._][lr]$/, "");
       const index = value.markers?.indexOf(key) ?? -1;
       if (index >= 0) onNumberSelect(index + 1);
@@ -51,7 +52,7 @@ export function createExercise(
     if (wasSelected && !painting) return;
     selectedMesh = mesh;
     outline(mesh, new Color3(0.03, 0.25, 0.6));
-    onBoneSelect(boneSelection(mesh.material!.name, mesh.name));
+    onBoneSelect(structureSelection(mesh));
   };
   return {
     choose, clear,
@@ -65,6 +66,15 @@ export function createExercise(
     },
     highlight: () => highlight(scene, value),
   };
+}
+
+function structureSelection(mesh: AbstractMesh) {
+  const material = mesh.material!.name;
+  const selection = boneSelection(material, mesh.name);
+  const muscle = [...MUSCLES, ...MUSCLE_DISTRACTORS].find(
+    item => item.key === materialKey(material),
+  );
+  return muscle ? { ...selection, name: `Músculo ${muscle.name}` } : selection;
 }
 
 function togglePaint(

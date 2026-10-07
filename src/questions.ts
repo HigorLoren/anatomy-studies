@@ -204,7 +204,7 @@ export function createTest(config: TestConfig, candidates = filterQuestions(conf
     [pool[index], pool[other]] = [pool[other], pool[index]];
   }
   const count = Number.isFinite(config.count) ? Math.trunc(config.count) : 20;
-  return pool.slice(0, Math.max(1, Math.min(20, count)));
+  return pool.slice(0, Math.max(1, count));
 }
 
 export const normalizeAnswer = (value: string) =>

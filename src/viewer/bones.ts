@@ -4,6 +4,16 @@ const materialKey = (name: string) => name.replace(/\.\d+$/, "");
 
 // Nomenclatura de docs/catalogo-de-estruturas-anatomicas.md.
 const boneNames: Record<string, string> = {
+  "Muscle tile plain": "Músculo fora do roteiro",
+  "Muscle basic": "Músculo fora do roteiro",
+  "Muscle long tendons": "Músculo fora do roteiro",
+  humerus: "Osso úmero",
+  radius: "Osso rádio",
+  ulna: "Osso ulna",
+  femur: "Osso fêmur",
+  Patella: "Osso patela",
+  Tibia: "Osso tíbia",
+  Fibula: "Osso fíbula",
   Atlas: "1ª Vértebra Cervical C1 (Atlas)",
   Axis: "2ª Vértebra Cervical C2 (Áxis)",
   "Body of sternum": "Corpo do Esterno",

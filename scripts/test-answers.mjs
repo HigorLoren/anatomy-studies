@@ -18,12 +18,17 @@ source += readFileSync(new URL("../src/answerIssue.ts", import.meta.url), "utf8"
   .replace('import { classifyAnswer, normalizeAnswer, type Question } from "./questions";', "");
 source += readFileSync(new URL("../src/app/learning.ts", import.meta.url), "utf8")
   .replace('import { filterQuestions, type Question, type TestConfig } from "../questions";', "");
+source += readFileSync(new URL("../src/models.ts", import.meta.url), "utf8");
+source += readFileSync(new URL("../src/viewer/bones.ts", import.meta.url), "utf8")
+  .replace(/^import.*$/gm, "");
+source += readFileSync(new URL("../src/exploration.ts", import.meta.url), "utf8")
+  .replace(/^import.*$/gm, "");
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
 const { QUESTION_BANK, classifyAnswer, isCorrect, practicalHintBones, allBlanksFilled, answerIssue,
   MUSCLES, MUSCLE_DISTRACTORS, muscleExposure, questionMuscleTarget,
-  filterQuestions, createTest, recordAnswer, testPool, restoreLearning, points, formatPoints } = await import(
+  filterQuestions, createTest, recordAnswer, testPool, restoreLearning, points, formatPoints, MODELS, EXPLORATION_VIEWS, preparedMuscleFile } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 const named = (highlight) => QUESTION_BANK.find(
@@ -392,7 +397,59 @@ test("invalid storage and outdated question IDs are handled without losing valid
   const saved = restoreLearning(JSON.stringify(stored), QUESTION_BANK);
   assert.deepEqual(Object.keys(saved.records), [first.id]);
   assert.equal(saved.session, null);
-  assert.equal(saved.config.count, 20);
+  assert.equal(saved.config.count, 100);
   assert.deepEqual(saved.config.categories, [first.category]);
   assert.deepEqual(saved.config.kinds, []);
+});
+
+
+test("exploration exposes every question model and isolated bone layout without quiz markers", () => {
+  const models = new Set(MODELS.map(option => option.value));
+  for (const question of QUESTION_BANK) {
+    if (!question.model) continue;
+    assert(models.has(question.model), question.model);
+    if (question.isolatedBones?.length) {
+      assert(EXPLORATION_VIEWS[question.model].some(view =>
+        [...(view.exercise?.isolatedBones ?? [])].sort().join("|") ===
+        [...question.isolatedBones].sort().join("|")), question.id);
+      const neighbors = practicalHintBones(question);
+      if (neighbors.length) assert(EXPLORATION_VIEWS[question.model].some(view =>
+        view.exercise.preserveLayout &&
+        [...view.exercise.isolatedBones].sort().join("|") ===
+        [...question.isolatedBones, ...neighbors].sort().join("|")), question.id);
+    }
+  }
+  for (const views of Object.values(EXPLORATION_VIEWS)) {
+    for (const view of views) {
+      assert(view.exercise.exploring);
+      assert(!view.exercise.clayTarget && !view.exercise.markers && !view.exercise.highlight);
+    }
+  }
+});
+
+test("exploration offers all five prepared muscle files and deep lower limb views", () => {
+  const files = [];
+  for (const model of ["upper-muscles-practice", "lower-muscles-practice"]) {
+    for (const { exercise } of EXPLORATION_VIEWS[model]) {
+      files.push(preparedMuscleFile(model, exercise.muscleTarget, exercise.exposeDeepMuscles));
+    }
+  }
+  assert.deepEqual(files.sort(), ["upper-muscles-prepared", "upper-muscles-uncovered-base",
+    "lower-muscles-prepared", "lower-muscles-vastus-intermedius", "lower-muscles-soleus"].sort());
+});
+
+
+test("tests allow more than 20 questions and preserve large saved sessions", () => {
+  assert.equal(createTest({ count: 30 }).length, 30);
+  assert.equal(createTest({ count: 1000 }).length, QUESTION_BANK.length);
+  assert.equal(createTest({ count: NaN }).length, 20);
+  const questions = createTest({ count: 35 });
+  const session = { ids: questions.map(q => q.id), index: 25,
+    answers: questions.map((q, index) => index < 25 ? q.answer : null), draft: "rascunho" };
+  const saved = restoreLearning(JSON.stringify({ version: 1, records: {}, session,
+    config: { count: 35 } }), QUESTION_BANK);
+  assert.deepEqual(saved.session, session);
+  assert.equal(saved.config.count, 35);
+  assert.equal(restoreLearning(null, QUESTION_BANK).config.count, 20);
+  assert.equal(formatPoints(30 * points(30)), "10");
 });

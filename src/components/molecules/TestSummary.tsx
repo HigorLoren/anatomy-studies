@@ -9,9 +9,9 @@ export function TestSummary({ count, onCount, available, total, review, hasSessi
         <aside class="test-summary" aria-label="Resumo do teste">
           <h2>Seu teste</h2>
           <label class="test-count">Quantidade de questões
-            <input type="number" min="1" max="20" value={count} onInput={event => {
+            <input type="number" min="1" value={count} onInput={event => {
               const value = event.currentTarget.valueAsNumber;
-              onCount(Number.isFinite(value) ? Math.max(1, Math.min(20, Math.trunc(value))) : 1);
+              onCount(Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : 1);
             }} />
           </label>
           <p class="test-availability" role="status" aria-live="polite">

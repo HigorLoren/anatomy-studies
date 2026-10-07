@@ -149,7 +149,7 @@ test("mirrored geometry participates in isolation and only the selected side rem
     femur.material = new PBRMaterial("femur", scene);
     femur.parent = group;
     const meshes = [radius, femur];
-    mirrorRightGroups([group], [...meshes, group], meshes);
+    const nodes = mirrorRightGroups([group], [...meshes, group], meshes);
     assert.equal(meshes.length, 4, "all mirrored pieces must be included");
     const arrange = createIsolatedBones(meshes);
     arrange(["radius"]);
@@ -158,6 +158,9 @@ test("mirrored geometry participates in isolation and only the selected side rem
     arrange(["femur"]);
     assert.deepEqual(meshes.filter((mesh) => mesh.isEnabled()), [femur]);
     assert(femur.getBoundingInfo().boundingBox.centerWorld.length() < 0.001);
+    for (const node of nodes) if (!node.isDisposed()) node.dispose();
+    assert.equal(scene.meshes.length, 0,
+      "switching models disposes mirrored meshes even after isolation detached them");
   } finally {
     scene.dispose();
     engine.dispose();

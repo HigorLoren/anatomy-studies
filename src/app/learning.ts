@@ -57,7 +57,7 @@ function validRecord(record: unknown): record is QuestionRecord {
 function validConfig(config: TestConfig | undefined, bank: Question[]): TestConfig {
   if (!config || typeof config !== "object") return { count: 20 };
   return {
-    count: Number.isInteger(config.count) ? Math.max(1, Math.min(20, config.count)) : 20,
+    count: Number.isSafeInteger(config.count) ? Math.max(1, config.count) : 20,
     categories: Array.isArray(config.categories)
       ? config.categories.filter(category => bank.some(question => question.category === category))
       : undefined,
@@ -69,7 +69,7 @@ function validConfig(config: TestConfig | undefined, bank: Question[]): TestConf
 
 function validSession(session: Session | null, ids: Set<string>): Session | null {
   if (!session || !Array.isArray(session.ids) || !session.ids.length
-    || session.ids.length > 20 || !session.ids.every(id => ids.has(id))
+    || session.ids.length > ids.size || !session.ids.every(id => ids.has(id))
     || new Set(session.ids).size !== session.ids.length) return null;
   return validSessionAnswers(session);
 }

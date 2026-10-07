@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import {
   createViewer,
   type BoneSelection,
@@ -7,7 +8,7 @@ import {
   type Viewer,
   type ViewerStatus,
 } from "../../viewer";
-import type { ModelId } from "../../models";
+import { MODELS, type ModelId } from "../../models";
 import { useViewerFullscreen } from "./atlas/useViewerFullscreen";
 import { ViewerToolbar } from "./atlas/ViewerToolbar";
 import { BoneLabel } from "./atlas/BoneLabel";
@@ -19,6 +20,7 @@ export type AtlasViewerProps = {
   mode: "explore" | "quiz";
   model: ModelId;
   onModelChange?: (model: ModelId) => void;
+  viewPicker?: ComponentChildren;
   exercise: Exercise;
   answer: string;
   checked: boolean;
@@ -32,6 +34,7 @@ export function AtlasViewer({
   mode,
   model,
   onModelChange,
+  viewPicker,
   exercise,
   answer,
   checked,
@@ -103,6 +106,7 @@ export function AtlasViewer({
       <ViewerToolbar
         explore={mode === "explore"} marked={Boolean(exercise?.clayTarget)} model={model} modelLabel={modelLabel}
         onModelChange={onModelChange}
+        viewPicker={viewPicker}
         fullscreen={fullscreen} fullscreenButtonRef={fullscreenButtonRef}
         toggleFullscreen={toggleFullscreen} painting={painting}
         onPaintingChange={(enabled) => { setPainting(enabled); viewerRef.current?.paint(enabled); }}
@@ -136,7 +140,5 @@ export function AtlasViewer({
 
 function viewerLabel(mode: "explore" | "quiz", model: ModelId) {
   if (mode === "quiz") return "Peça anatômica";
-  if (model.startsWith("spine-")) return "Peças da coluna vertebral";
-  if (model === "thorax-practice") return "Ossos do tórax";
-  return model === "exploded-skull" ? "Crânio explodido" : "Crânio humano";
+  return MODELS.find(option => option.value === model)?.label ?? "Modelo anatômico";
 }

@@ -5,16 +5,15 @@ export const MODELS = [
   { value: "spine-practice", label: "Coluna vertebral" },
   { value: "spine-pieces", label: "Vértebras" },
   { value: "thorax-practice", label: "Tórax" },
+  { value: "spine-cervical-practice", label: "Coluna cervical" },
+  { value: "skeleton-practice", label: "Esqueleto · Peças ósseas" },
+  { value: "upper-limb-practice", label: "Membro superior · Ossos" },
+  { value: "lower-limb-practice", label: "Membro inferior e pelve · Ossos" },
+  { value: "upper-muscles-practice", label: "Membro superior · Músculos" },
+  { value: "lower-muscles-practice", label: "Membro inferior · Músculos" },
 ] as const;
 
-export type ModelId =
-  | (typeof MODELS)[number]["value"]
-  | "spine-cervical-practice"
-  | "skeleton-practice"
-  | "upper-muscles-practice"
-  | "lower-muscles-practice"
-  | "upper-limb-practice"
-  | "lower-limb-practice";
+export type ModelId = (typeof MODELS)[number]["value"];
 export const DEFAULT_MODEL: ModelId = "overview-skull-natural";
 
 export const SPINE_PIECES = [

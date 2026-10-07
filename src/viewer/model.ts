@@ -108,7 +108,7 @@ export function createModelLoader(options: Options) {
     },
     get naturalMaterials() { return replacements; },
     arrangeExercise(value: Exercise) {
-      if (activeModel && modelFile(activeModel, value) !== activeFile) {
+      if (activeModel && needsModelReload(activeModel, activeFile, value, layoutSignature)) {
         void load(activeModel, () => {}, value);
         return;
       }
@@ -300,4 +300,9 @@ function separatedGroup(exercise: Exercise) {
 
 function displayExercise(model: ModelId, exercise: Exercise): Exercise {
   return model === "spine-pieces" ? { isolatedBones: SPINE_PIECES } : exercise;
+}
+
+function needsModelReload(model: ModelId, file: string, value: Exercise, layout: string) {
+  return modelFile(model, value) !== file
+    || Boolean(value?.exploring && !value.isolatedBones?.length && layout);
 }

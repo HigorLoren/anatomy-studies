@@ -19,6 +19,7 @@ export function mirrorRightGroups(
     nodes.push(mirrored);
 
     for (const mesh of mirrored.getChildMeshes()) {
+      nodes.push(mesh);
       meshes.push(mesh);
       mesh.name = mesh.name.replace(`${group.name}.`, "").replace(/\.r$/, ".l");
     }

@@ -197,3 +197,15 @@
   .test-field-heading { margin-top: 0; justify-content: flex-start; margin-bottom: 12px; }
   .test-choices legend { margin-bottom: 4px; }
 }
+
+.viewer-piece-picker { flex: 1; max-width: 45%; }
+.viewer-piece-picker select { width: 100%; font-size: 15px; text-overflow: ellipsis; }
+.atlas-viewer--explore .viewer-toolbar > .viewer-model-picker:first-child { max-width: 48%; }
+.atlas-viewer--fullscreen .viewer-piece-picker { max-width: 40%; }
+@media (max-width: 640px) {
+  .atlas-viewer--explore .viewer-toolbar { flex-wrap: wrap; }
+  .atlas-viewer--explore .viewer-toolbar > .viewer-model-picker:first-child { max-width: calc(100% - 56px); }
+  .viewer-piece-picker { order: 3; flex-basis: 100%; max-width: 100%; }
+  .atlas-viewer--fullscreen .viewer-piece-picker { max-width: 100%; }
+  .atlas-viewer--fullscreen .viewer-piece-picker select { width: 100%; }
+}

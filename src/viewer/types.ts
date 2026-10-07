@@ -13,6 +13,7 @@ export type Marker = {
 };
 
 export type Exercise = {
+  exploring?: boolean;
   markers?: string[];
   clayTarget?: string;
   isolatedBones?: string[];
