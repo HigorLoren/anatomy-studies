@@ -102,8 +102,8 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
 ];
 
 const spineStructures = [
-  { key: "Atlas", name: "Primeira vértebra cervical (atlas)", accepted: ["primeira vértebra cervical", "vértebra cervical C1", "vértebra atlas"], incompleteAccepted: ["atlas", "C1"], explanation: "O atlas é a primeira vértebra cervical (C1) e se articula com o crânio." },
-  { key: "Axis", name: "Segunda vértebra cervical (áxis)", accepted: ["segunda vértebra cervical", "vértebra cervical C2", "vértebra áxis"], incompleteAccepted: ["áxis", "C2"], explanation: "O áxis é a segunda vértebra cervical (C2), caracterizada pela presença do dente." },
+  { key: "Atlas", name: "Vértebra cervical atlas", accepted: ["primeira vértebra cervical (atlas)"], incompleteAccepted: ["atlas", "C1", "vértebra atlas", "primeira vértebra cervical", "vértebra cervical C1"], explanation: "O atlas é a primeira vértebra cervical (C1) e se articula com o crânio." },
+  { key: "Axis", name: "Vértebra cervical áxis", accepted: ["segunda vértebra cervical (áxis)"], incompleteAccepted: ["áxis", "C2", "vértebra áxis", "segunda vértebra cervical", "vértebra cervical C2"], explanation: "O áxis é a segunda vértebra cervical (C2), caracterizada pela presença do dente." },
   { key: "Vertebra_C7", name: "Sétima vértebra cervical (proeminente)", accepted: ["vértebra proeminente", "sétima vértebra cervical", "vértebra cervical C7"], incompleteAccepted: ["C7", "proeminente"], explanation: "C7 é conhecida como vértebra proeminente por seu processo espinhoso longo." },
   { key: "Vertebra_C4", name: "Vértebra cervical típica", accepted: ["vértebra cervical típica"], incompleteAccepted: ["vértebra cervical", "cervical típica", "cervical", "C4"], explanation: "O destaque corresponde a C4, um exemplo de vértebra cervical típica, com forames transversários." },
   { key: "Vertebra_T7", name: "Vértebra torácica", accepted: ["vértebra torácica"], incompleteAccepted: ["torácica", "T7"], explanation: "O destaque corresponde a T7, uma vértebra torácica que apresenta superfícies articulares para as costelas." },
