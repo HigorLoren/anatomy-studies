@@ -33,7 +33,7 @@ A experiência KTX2/Basis está preservada na branch `experiment/skull-ktx2`, in
 
 ## Banco de questões e testes
 
-O banco contém 23 perguntas categorizadas por região (crânio, tórax e coluna vertebral) e tipo (identificação, denominação e completar a frase). Cada pergunta tem um identificador, respostas aceitas e explicação em `src/questions.ts`.
+O banco contém 93 perguntas: 23 da prática original e as 70 do simulado fornecido. Os filtros incluem crânio, tórax, coluna, membro superior, membro inferior e pelve, abdome e sistema nervoso; os tipos incluem identificação, denominação, completar a frase e diferenciação. Cada pergunta tem um identificador, respostas aceitas e explicação em `src/questions.ts`.
 
 Na abertura, escolha região, tipo e um máximo de 5, 10, 15 ou 20 questões. O teste sorteia perguntas sem repetição, limitado à quantidade disponível e ao teto de 20. Combinações sem perguntas não permitem iniciar um teste. Progresso, pontuação e revisão usam apenas as perguntas sorteadas. Refazer o teste realiza um novo sorteio com os mesmos filtros.
 
@@ -47,6 +47,34 @@ As respostas escritas aceitam diferenças de acentuação e capitalização. Nas
 
 A correção distingue nome completo correto (verde), nome específico incompleto (amarelo) e resposta incorreta (vermelho). Respostas incompletas não contam como acerto e mostram o nome completo esperado, inclusive na revisão do teste. Cada pergunta pode declarar `incompleteAccepted` com os nomes curtos que identificam sua estrutura; palavras genéricas e trechos arbitrários não recebem amarelo. Por exemplo, “cervical” é incompleto para “vértebra cervical típica”, enquanto “vértebra” é incorreto.
 
-A normalização aceita “m.” no lugar de “músculo” e “Mm.” no lugar de “músculos”, mantendo a distinção entre singular e plural. Acentuação, capitalização, espaços extras e pontuação final continuam sendo desconsiderados. Ainda não há perguntas musculares no banco; a regra já está disponível para elas.
+A normalização aceita “m.” no lugar de “músculo” e “Mm.” no lugar de “músculos”, mantendo a distinção entre singular e plural. Acentuação, capitalização, espaços extras e pontuação final continuam sendo desconsiderados. As questões musculares do simulado usam essas mesmas regras.
 
 Execute `node --test scripts/test-answers.mjs` para verificar a correção dos nomes, os casos incompletos e as abreviações musculares.
+
+## Simulado de 70 questões
+
+As questões do arquivo `simulado_anatomia_completo_70_questoes.txt` estão em `src/simuladoPart1.ts`, `src/simuladoPart2.ts` e `src/simuladoPart3.ts`. IDs `simulado-1` a `simulado-70` e `sourceNumber` preservam a referência ao original. Os filtros e sorteios incluem as novas perguntas; o limite de 20 por teste permanece.
+
+Quatorze questões usam os modelos existentes: crânio natural, vértebras cervicais e regiões do esqueleto (`overview-skeleton.glb`). No teste prático, úmero, rádio, ulna, fêmur, patela, tíbia e fíbula aparecem como peças isoladas. As visualizações regionais continuam disponíveis no código para conjuntos que exigirem contexto. As vértebras continuam isoladas para estudo da peça. As demais são escritas, sem dependência do visualizador. Estruturas sem alvo individual verificado, como ligamentos, músculos e acidentes ósseos, usam o enunciado descritivo.
+
+Respostas com várias lacunas aceitam ponto e vírgula, vírgula ou “e” como separador. A ordem é exigida quando determina a associação, como C1/C2 ou tíbia/fíbula. Listas de componentes do manguito rotador, do disco, das meninges, do tronco encefálico e dos ramos do isquiático aceitam qualquer ordem. Os dois nomes da articulação do quadril também podem ser invertidos. A questão 51 aceita qualquer músculo do manguito. A questão 10 descreve corretamente o braço entre ombro e cotovelo; as questões 61–63 usam lacunas para permitir correção objetiva. A questão 69 foi esclarecida para pedir os dois ramos terminais do isquiático, tibial e fibular comum, pois o original não identifica um único nervo.
+
+Nas lacunas que pedem nomes musculares, o enunciado não fornece “músculo” antes da lacuna. A resposta exige o nome completo, aceitando “Músculo” ou “M.” para cada músculo. Na lista do manguito rotador, “Músculos” ou “Mm.” pode prefixar a lista inteira. Nomes individuais sem o prefixo recebem classificação incompleta e não contam como acerto.
+
+## Apresentação de prova prática
+
+Questões de denominação com alvo 3D usam “Denomine a estrutura marcada”, título neutro no visualizador e um pequeno volume azul sobre a superfície da peça, simulando massinha. O contorno de toda a estrutura foi removido dessas questões. A descrição original aparece apenas depois da resposta. O simulado prioriza ossos isolados nos membros e vértebras; estruturas bilaterais isoladas usam a peça direita quando disponível. Os ossos do crânio permanecem juntos no crânio natural, como nas peças usadas em aula, com massinha azul na estrutura pedida. Conjuntos já utilizados para crânio e esterno permanecem nas questões originais, e as questões de seleção por número mantêm suas alternativas.
+
+Nas questões com peça isolada, o botão “Mostrar estruturas vizinhas” acrescenta no máximo duas estruturas, mantendo suas posições anatômicas. “Ocultar estruturas vizinhas” retorna à peça isolada. A marca azul permanece no alvo, sem mostrar os nomes das estruturas. A dica começa oculta em cada questão; o crânio montado não recebe esse botão. Os vizinhos são definidos em `src/practicalHints.ts`.
+
+A massinha é posicionada sobre a primeira superfície visível da estrutura, com pequeno afastamento ao longo da normal para não ficar enterrada no osso. Os alvos laterais do crânio começam com uma vista lateral oblíqua. Peças isoladas começam com a câmera à altura da peça, e o centro de rotação coincide com o centro exato do conjunto visível.
+
+As lacunas são campos editáveis dentro da própria frase. Cada campo recebe um termo, sem exigir separadores digitados. Todos os campos precisam estar preenchidos para conferir a resposta. A ordem só é exigida nas associações com posições ou estruturas específicas, como atlas/áxis para C1/C2 e medial/lateral para tíbia/fíbula.
+
+Apenas questões de denominação das peças isoladas de úmero, ulna, rádio e fíbula usam rotação livre por trackball com um dedo ou botão esquerdo do mouse, incluindo quando sua dica está aberta. Crânio, vértebras, outros ossos, identificação por números e exploração mantêm a órbita original. O movimento pode combinar os eixos e inclinar a peça na tela; arrastos próximos às bordas facilitam essa inclinação. Pinça, pan com dois dedos, Ctrl + arrasto e rolagem continuam a cargo do Babylon. O reset restaura também o eixo vertical da câmera. Os testes em `scripts/test-isolated-bones.mjs` cobrem o pivô, a distância, a inclinação e a separação entre um e dois toques.
+
+## Layout de estudo
+
+A tela inicial concentra os filtros do teste e o acesso à base de perguntas, sem a imagem decorativa do crânio. Nas questões práticas, a peça ocupa a área principal; em telas grandes, a resposta e a dica ficam ao lado, e no celular aparecem abaixo da visualização.
+
+O atlas usa um seletor de modelo compacto e controles sobre a visualização. Tela cheia, pintura, ajuda de gestos, reset e zoom permanecem acessíveis. O enquadramento inicial ajusta os limites da peça à proporção da tela. Na tela cheia, Escape sai da visualização e o foco retorna ao botão de expansão.
