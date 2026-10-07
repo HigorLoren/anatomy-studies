@@ -1,6 +1,6 @@
 import { hasAnswerBlanks } from "../answerBlanks";
 import { ProgressBar } from "../components/molecules/ProgressBar";
-import { AtlasViewer } from "../components/organisms/AtlasViewer";
+import { PracticalViewer } from "../components/organisms/PracticalViewer";
 import { QuizForm } from "../components/organisms/QuizForm";
 import { DEFAULT_MODEL } from "../models";
 import { MARKER_BONES, type Question } from "../questions";
@@ -99,7 +99,9 @@ export function QuizScreen(props: QuizScreenProps) {
         </>}
         {(question.model || question.kind === "identify" ||
           (question.kind === "name" && question.highlight)) && (
-          <AtlasViewer
+          <PracticalViewer
+            key={question.id}
+            question={question}
             mode="quiz"
             model={question.model ?? DEFAULT_MODEL}
             exercise={exercise}
