@@ -42,12 +42,12 @@ export function ViewerToolbar({
           onClick={toggleFullscreen} class="viewer-icon-button">
           <ViewerIcon name={fullscreen ? "collapse" : "expand"} />
         </button>
-      </div>
-      {explore && <label class="viewer-paint-toggle">
+        {explore && <div class="viewer-paint-row"><label class="viewer-paint-toggle">
         <input type="checkbox" checked={painting}
           onChange={(event) => onPaintingChange(event.currentTarget.checked)} />
         Pintar estruturas
-      </label>}
+        </label></div>}
+      </div>
     </>
   );
 }
