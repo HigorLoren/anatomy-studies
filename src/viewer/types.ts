@@ -28,5 +28,6 @@ export type Viewer = {
   load(model: ModelId): void;
   exercise(value: Exercise): void;
   reset(view?: "default" | "question"): void;
+  zoom(factor: number): void;
   dispose(): void;
 };

@@ -25,7 +25,7 @@ type Options = {
   frameModel: () => void;
   keyLight: DirectionalLight;
   scene: Scene;
-  setModel: (center: Vector3, radius: number) => void;
+  setModel: (center: Vector3, radius: number, halfSize: Vector3) => void;
   setStatus: (value: ViewerStatus) => void;
   setupExercise: () => void;
   getExercise: () => Exercise;
@@ -144,7 +144,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   fill.intensity = natural ? 0.8 : 1;
   key.intensity = natural ? 1.5 : 0.2;
 
-  setModel(min.add(max).scale(0.5), radius);
+  setModel(min.add(max).scale(0.5), radius, max.subtract(min).scale(0.5));
 
   camera.upVector = Vector3.Up();
   camera.alpha = exercise ? Math.PI / 2 : Math.PI / 2.9;
@@ -160,6 +160,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
 
   frame();
   practiceView(camera, scene, exercise);
+  frame();
 }
 
 function bounds(meshes: Scene["meshes"]) {

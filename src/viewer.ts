@@ -1,4 +1,3 @@
-import { attachTrackball } from "./viewer/trackball";
 import "@babylonjs/loaders/glTF";
 import { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import { Engine } from "@babylonjs/core/Engines/engine";
@@ -8,6 +7,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Scene } from "@babylonjs/core/scene";
+import { attachTrackball } from "./viewer/trackball";
 import { practiceView } from "./viewer/practiceView";
 import { focusPiece } from "./viewer/focusPiece";
 import { createExercise } from "./viewer/exercise";
@@ -73,8 +73,9 @@ export function createViewer(
 
   let center = Vector3.Zero();
   let radius = 0;
+  let halfSize = Vector3.Zero();
 
-  const frameModel = () => frameCamera(camera, engine, radius);
+  const frameModel = () => frameCamera(camera, engine, radius, halfSize);
   const markers = createMarkers({ canvas, camera, engine, scene, onMarkers });
   const exercise = createExercise(scene, onBoneSelect);
 
@@ -91,9 +92,10 @@ export function createViewer(
     frameModel,
     keyLight,
     scene,
-    setModel: (nextCenter, nextRadius) => {
+    setModel: (nextCenter, nextRadius, nextHalfSize) => {
       center = nextCenter;
       radius = nextRadius;
+      halfSize = nextHalfSize;
       camera.upVector = Vector3.Up();
       camera.setTarget(center.clone());
     },
@@ -123,6 +125,7 @@ export function createViewer(
 
   return {
     fps: () => Math.round(engine.getFps()), paint: exercise.paint,
+    zoom: (factor) => zoomCamera(camera, factor),
     exercise(value) {
       loader.arrangeExercise(value);
       exercise.set(value, setupExercise);
@@ -144,6 +147,7 @@ export function createViewer(
         : exercise.value?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
       frameModel();
       practiceView(camera, scene, exercise.value);
+      frameModel();
       setupExercise();
     },
     load(model) {
@@ -160,9 +164,32 @@ export function createViewer(
   };
 }
 
-function frameCamera(camera: ArcRotateCamera, engine: Engine, radius: number) {
+function zoomCamera(camera: ArcRotateCamera, factor: number) {
+  camera.inertialRadiusOffset = 0;
+  camera.radius = Math.max(camera.lowerRadiusLimit ?? 0,
+    Math.min(camera.upperRadiusLimit ?? Infinity, camera.radius * factor));
+}
+
+function frameCamera(camera: ArcRotateCamera, engine: Engine, radius: number, halfSize: Vector3) {
   if (!radius) return;
   const vertical = camera.fov / 2;
   const horizontal = Math.atan(Math.tan(vertical) * engine.getAspectRatio(camera));
-  camera.radius = radius / Math.sin(Math.min(vertical, horizontal)) * CAMERA_FRAME_PADDING;
+  // Fit the visible model's bounds in the current view instead of its bounding sphere.
+  camera.getViewMatrix(true);
+  const towardCamera = camera.position.subtract(camera.target).normalize();
+  const right = Vector3.Cross(camera.upVector, towardCamera).normalize();
+  const up = Vector3.Cross(towardCamera, right).normalize();
+  let distance = 0;
+  for (const x of [-halfSize.x, halfSize.x]) {
+    for (const y of [-halfSize.y, halfSize.y]) {
+      for (const z of [-halfSize.z, halfSize.z]) {
+        const corner = new Vector3(x, y, z);
+        const depth = Vector3.Dot(corner, towardCamera);
+        distance = Math.max(distance,
+          Math.abs(Vector3.Dot(corner, right)) / Math.tan(horizontal) + depth,
+          Math.abs(Vector3.Dot(corner, up)) / Math.tan(vertical) + depth);
+      }
+    }
+  }
+  camera.radius = Math.max(camera.lowerRadiusLimit ?? 0, distance * CAMERA_FRAME_PADDING);
 }
