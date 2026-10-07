@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "build": "npm run lint && npm run typecheck && vite build",
     "preview": "vite preview",
-    "test": "node --test scripts/test-*.mjs"
+    "test": "node --test scripts/test-*.mjs",
+    "build:readable": "npm run lint && npm run typecheck && vite build --config vite.readable.config.ts",
+    "preview:readable": "vite preview --config vite.readable.config.ts"
   },
   "dependencies": {
     "@babylonjs/core": "latest",

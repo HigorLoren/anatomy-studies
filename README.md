@@ -69,6 +69,20 @@ npm run preview
 
 O build é gerado em `dist/`. O comando `preview` serve essa versão localmente.
 
+### Build legível separado
+
+```sh
+npm run build:readable
+npm run preview:readable
+```
+
+Esse processo gera `dist-readable/`, separado do build padrão em `dist/`.
+A minificação de JavaScript e CSS fica desativada, incluindo a otimização do
+Tailwind, e os source maps são gerados para depuração. O bundler preserva os nomes
+de funções e classes e não aplica encurtamento por minificação. Nomes podem receber
+sufixos para resolver conflitos entre módulos; dependências já distribuídas com
+nomes curtos mantêm seus nomes originais.
+
 ## Como estudar
 
 - **Teste:** filtre o conteúdo por região e formato, escolha a quantidade e responda às questões sorteadas.
