@@ -1,6 +1,8 @@
 import { render } from "preact";
 import { useState } from "preact/hooks";
 import { usePractice } from "./app/usePractice";
+import { useLearning } from "./app/useLearning";
+import { testPool } from "./app/learning";
 import type { ViewerStatus } from "./viewer";
 import { QuestionNavigator } from "./components/molecules/QuestionNavigator";
 import { AppHeader } from "./components/molecules/AppHeader";
@@ -19,21 +21,18 @@ function App() {
   const [mode, setMode] = useState<Mode>("intro");
   const [model, setModel] = useState<ModelId>(DEFAULT_MODEL);
   const [status, setStatus] = useState<ViewerStatus>("loading");
-  const [config, setConfig] = useState<TestConfig>({
-    category: "all",
-    kind: "all",
-    count: 20,
-  });
-
-  const test = usePractice();
-  const free = usePractice();
+  const learning = useLearning();
+  const test = usePractice(learning.data.session, learning.record, learning.saveSession);
+  const free = usePractice(null, learning.record);
 
   const practice = mode === "free" ? free : test;
 
-  function start(selected: TestConfig = config) {
-    const questions = createTest(selected);
+  function start(selected: TestConfig = learning.data.config) {
+    const pool = testPool(selected, learning.data.records);
+    const candidates = selected.review ? pool.slice(0, selected.count) : pool;
+    const questions = createTest(selected, candidates);
     if (!questions.length) return;
-    setConfig(selected);
+    learning.saveConfig(selected);
     test.start(questions);
     setMode("quiz");
   }
@@ -70,7 +69,9 @@ function App() {
         }`}
       >
         {mode === "intro" && (
-          <IntroScreen onStart={start} onBank={() => setMode("bank")} />
+          <IntroScreen onStart={start} onBank={() => setMode("bank")}
+            onResume={() => setMode("quiz")} progress={learning.data}
+            storageError={learning.storageError} />
         )}
         {mode === "bank" && (
           <QuestionBankScreen
@@ -120,7 +121,7 @@ function App() {
             answers={test.answers}
             questions={test.questions}
             score={test.score}
-            onRestart={() => start()}
+            onRestart={() => setMode("intro")}
             onExplore={() => setMode("bank")}
           />
         )}

@@ -145,3 +145,55 @@
 @media (min-width: 1024px) {
   .practice-main--free .atlas-viewer--quiz:not(.atlas-viewer--fullscreen) { height: clamp(440px, calc(100dvh - 330px), 700px); }
 }
+
+.test-setup { color: var(--color-ink); }
+.test-intro { max-width: 620px; margin-bottom: 28px; }
+.test-intro h1 { font-size: clamp(30px, 4vw, 42px); font-weight: 500; letter-spacing: -.035em; }
+.test-intro p { margin-top: 10px; color: var(--color-muted); line-height: 1.7; }
+.test-builder { display: grid; grid-template-columns: minmax(0, 1fr) 290px; border-top: 1px solid #dce5eb; }
+.test-filters { padding: 28px 32px 28px 0; min-width: 0; }
+.test-source, .test-choices { min-width: 0; margin-bottom: 28px; }
+.test-source legend, .test-choices legend { font-size: 17px; font-weight: 600; margin-bottom: 14px; }
+.test-source label { display: flex; gap: 12px; align-items: flex-start; padding: 15px; border: 1px solid #dce5eb; border-radius: 12px; cursor: pointer; }
+.test-source label + label { margin-top: 10px; }
+.test-source .is-selected { border-color: #236783; background: #edf5f8; }
+.test-source strong { display: block; font-weight: 500; }
+.test-source small { display: block; margin-top: 4px; color: #637782; line-height: 1.5; }
+.test-source input { margin-top: 5px; }
+.test-field-heading { display: flex; justify-content: flex-end; margin-top: -38px; margin-bottom: 16px; }
+.test-field-heading button { color: #236783; font-size: 12px; cursor: pointer; padding: 4px 0; }
+.test-choice-list { display: flex; flex-wrap: wrap; gap: 10px; }
+.test-choice { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 10px 12px; border: 1px solid #dce5eb; border-radius: 8px; font-size: 14px; cursor: pointer; background: white; }
+.test-choice.is-selected { border-color: #236783; color: #183648; background: #edf5f8; }
+.test-setup input { accent-color: #236783; }
+.test-setup button:focus-visible, .test-setup input:focus-visible, .test-bank button:focus-visible { outline: 2px solid #236783; outline-offset: 4px; }
+.test-summary { background: #eaf1f5; padding: 26px 22px; align-self: start; border-radius: 0 0 16px 16px; }
+.test-summary h2 { font-size: 22px; font-weight: 500; margin-bottom: 24px; }
+.test-count { display: block; font-size: 14px; }
+.test-count input { display: block; width: 100%; padding: 10px 12px; background: white; border: 1px solid #bbcbd5; border-radius: 8px; margin-top: 8px; font: inherit; font-size: 18px; }
+.test-availability { margin-top: 10px; font-size: 12px; color: #637782; line-height: 1.5; }
+.test-grade { margin-top: 24px; border-top: 1px solid #cddce5; }
+.test-grade div { display: flex; justify-content: space-between; gap: 8px; padding: 13px 0; border-bottom: 1px solid #cddce5; font-size: 13px; }
+.test-grade dd { font-weight: 600; white-space: nowrap; }
+.test-summary-note { margin-top: 14px; font-size: 12px; line-height: 1.6; color: #637782; }
+.test-empty { margin-top: 18px; font-size: 13px; line-height: 1.6; }
+.test-empty--review { color: #b91c1c; }
+.test-start { width: 100%; padding: 15px; border-radius: 10px; background: #183648; color: white; font-weight: 500; margin-top: 24px; cursor: pointer; }
+.test-start:hover { background: #236783; }
+.test-start:disabled { opacity: .45; cursor: default; }
+.test-progress-note { color: #637782; font-size: 12px; line-height: 1.7; margin-top: 16px; }
+.test-resume { display: flex; gap: 20px; align-items: center; justify-content: space-between; padding: 18px 20px; margin-bottom: 24px; border-left: 3px solid #236783; background: #eaf1f5; }
+.test-resume p { font-size: 13px; color: #637782; margin-top: 4px; }
+.test-resume button, .test-bank button { cursor: pointer; border: 1px solid #bbcbd5; padding: 12px 16px; border-radius: 9px; background: white; color: #236783; font-size: 14px; white-space: nowrap; }
+.test-bank { display: flex; gap: 20px; justify-content: space-between; align-items: center; padding-top: 22px; border-top: 1px solid #dce5eb; margin-top: 10px; }
+.test-bank h2 { font-size: 18px; font-weight: 500; }
+.test-bank p { font-size: 13px; line-height: 1.7; color: #637782; margin-top: 5px; }
+@media (max-width: 760px) {
+  .test-builder { grid-template-columns: 1fr; }
+  .test-filters { padding: 24px 0 0; }
+  .test-summary { border-radius: 14px; padding: 22px; }
+  .test-summary h2 { margin-bottom: 18px; }
+  .test-resume, .test-bank { flex-wrap: wrap; }
+  .test-field-heading { margin-top: 0; justify-content: flex-start; margin-bottom: 12px; }
+  .test-choices legend { margin-bottom: 4px; }
+}

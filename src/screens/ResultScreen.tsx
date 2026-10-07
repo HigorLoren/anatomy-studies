@@ -1,9 +1,10 @@
 import { ResultAnswers } from "../components/organisms/ResultAnswers";
 import type { Question } from "../questions";
+import { formatPoints, points } from "../app/learning";
 
 type ResultScreenProps = {
   questions: Question[];
-  answers: string[];
+  answers: (string | null)[];
   score: number;
   onRestart: () => void;
   onExplore: () => void;
@@ -24,10 +25,11 @@ export function ResultScreen({
         </h1>
         <div class="my-7 flex items-center gap-6">
           <strong class="text-7xl font-medium tracking-tight text-accent">
-            {score}
-            <small class="text-3xl text-muted">/{questions.length}</small>
+            {formatPoints(score * points(questions.length))}
+            <small class="text-3xl text-muted">/10</small>
           </strong>
-          <span class="text-lg text-muted">respostas corretas</span>
+          <span class="text-lg text-muted">{score} de {questions.length} respostas corretas<br />
+            <small>{formatPoints(points(questions.length))} pontos por questão</small></span>
         </div>
         {score === questions.length && (
           <p class="max-w-lg text-[16px] font-medium text-accent">
@@ -40,7 +42,7 @@ export function ResultScreen({
             class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent flex items-center justify-between rounded-xl bg-ink px-5 py-4 text-sm font-medium text-white hover:bg-accent disabled:hover:bg-ink"
             onClick={onRestart}
           >
-            Praticar novamente <span class="text-xl font-normal ml-1">↺</span>
+            Montar outro teste
           </button>
           <button
             class="font-[inherit] cursor-pointer transition-colors disabled:cursor-default disabled:opacity-45 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent rounded-xl px-4 py-3 text-sm text-accent hover:bg-slate-200/60"

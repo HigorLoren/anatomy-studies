@@ -1,4 +1,5 @@
 import { useState } from "preact/hooks";
+import { formatPoints, points } from "../app/learning";
 import { hasAnswerBlanks } from "../answerBlanks";
 import { ProgressBar } from "../components/molecules/ProgressBar";
 import { PracticalViewer } from "../components/organisms/PracticalViewer";
@@ -95,7 +96,8 @@ export function QuizScreen(props: QuizScreenProps) {
             <span class="sm:hidden">{index + 1} / {total}</span>
             <span class="hidden sm:inline">Questão {index + 1} de {total}</span>
           </span>
-          <span>{questionKinds[question.kind]}</span>
+          <span>{questionKinds[question.kind]}{!free &&
+            ` · ${formatPoints(points(total))} pontos`}</span>
         </div>
         <ProgressBar current={index} total={total} />
         {!hasAnswerBlanks(question) && <>

@@ -180,20 +180,25 @@ export const QUESTION_BANK: Question[] = [...rawQuestions.map<Question>((questio
 ...createMuscleQuestions()].map(muscleNamingQuestion).map(practicalQuestion);
 
 export type TestConfig = {
-  category: Category | "all";
-  kind: Question["kind"] | "all";
+  category?: Category | "all";
+  kind?: Question["kind"] | "all";
+  categories?: Category[];
+  kinds?: Question["kind"][];
+  review?: boolean;
   count: number;
 };
 
-export function filterQuestions(config: Pick<TestConfig, "category" | "kind">) {
+export function filterQuestions(config: Omit<TestConfig, "count">) {
   return QUESTION_BANK.filter((question) =>
-    (config.category === "all" || question.category === config.category) &&
-    (config.kind === "all" || question.kind === config.kind),
+    (config.categories ? config.categories.includes(question.category)
+      : !config.category || config.category === "all" || question.category === config.category) &&
+    (config.kinds ? config.kinds.includes(question.kind)
+      : !config.kind || config.kind === "all" || question.kind === config.kind),
   );
 }
 
-export function createTest(config: TestConfig): Question[] {
-  const pool = [...filterQuestions(config)];
+export function createTest(config: TestConfig, candidates = filterQuestions(config)): Question[] {
+  const pool = [...candidates];
   for (let index = pool.length - 1; index > 0; index--) {
     const other = Math.floor(Math.random() * (index + 1));
     [pool[index], pool[other]] = [pool[other], pool[index]];

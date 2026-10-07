@@ -16,11 +16,14 @@ source += readFileSync(new URL("../src/practicalHints.ts", import.meta.url), "ut
 source += readFileSync(new URL("../src/answerBlanks.ts", import.meta.url), "utf8");
 source += readFileSync(new URL("../src/answerIssue.ts", import.meta.url), "utf8")
   .replace('import { classifyAnswer, normalizeAnswer, type Question } from "./questions";', "");
+source += readFileSync(new URL("../src/app/learning.ts", import.meta.url), "utf8")
+  .replace('import { filterQuestions, type Question, type TestConfig } from "../questions";', "");
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
 const { QUESTION_BANK, classifyAnswer, isCorrect, practicalHintBones, allBlanksFilled, answerIssue,
-  MUSCLES, MUSCLE_DISTRACTORS, muscleExposure, questionMuscleTarget } = await import(
+  MUSCLES, MUSCLE_DISTRACTORS, muscleExposure, questionMuscleTarget,
+  filterQuestions, createTest, recordAnswer, testPool, restoreLearning, points, formatPoints } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 const named = (highlight) => QUESTION_BANK.find(
@@ -329,4 +332,67 @@ test("axis requires its full anatomical name in every naming and completion ques
     assert.notEqual(classifyAnswer(simulated(number), "vértebra cervical atlas; axis"), "correct");
     assert.match(answerIssue(simulated(number), "vértebra cervical atlas; axis"), /vértebra cervical/i);
   }
+});
+
+
+test("tests combine regions and kinds, reject empty selections, and cap actual question count", () => {
+  const config = { categories: ["upper", "lower"], kinds: ["identify", "name"], count: 20 };
+  const pool = filterQuestions(config);
+  assert(pool.some(q => q.category === "upper"));
+  assert(pool.some(q => q.category === "lower"));
+  assert(pool.every(q => config.categories.includes(q.category) && config.kinds.includes(q.kind)));
+  assert.equal(filterQuestions({ categories: [], kinds: ["name"] }).length, 0);
+  assert.equal(filterQuestions({ categories: ["upper"], kinds: [] }).length, 0);
+  assert.equal(createTest(config).length, 20);
+  assert.equal(new Set(createTest(config).map(q => q.id)).size, 20);
+  const small = { categories: ["abdomen"], kinds: ["name"], count: 20 };
+  assert.equal(createTest(small).length, 1);
+  assert.equal(points(20), 0.5);
+  assert.equal(points(5), 2);
+  assert.equal(points(createTest(small).length), 10);
+  assert.equal(formatPoints(3 * points(3)), "10");
+});
+
+test("error review prioritizes recurring errors and removes a question after a correct retry", () => {
+  const [first, second, unseen] = QUESTION_BANK;
+  let records = recordAnswer({}, first.id, false);
+  records = recordAnswer(records, second.id, false);
+  records = recordAnswer(records, second.id, false);
+  assert.deepEqual(testPool({ review: true }, records).map(q => q.id), [second.id, first.id]);
+  records = recordAnswer(records, second.id, true);
+  assert.deepEqual(testPool({ review: true }, records).map(q => q.id), [first.id]);
+  assert(!testPool({ review: true }, records).some(q => q.id === unseen.id));
+  assert.deepEqual(records[second.id], { attempts: 3, errors: 2, lastCorrect: true });
+  assert.equal(testPool({ review: true, categories: [] }, records).length, 0);
+});
+
+test("saved progress preserves skipped answers, drafts and position across a JSON round trip", () => {
+  const [first, second, third] = QUESTION_BANK;
+  const session = { ids: [first.id, second.id, third.id], index: 2,
+    answers: [first.answer, "", null], draft: "rascunho" };
+  const records = recordAnswer({}, second.id, false);
+  const config = { count: 3, categories: [first.category], kinds: [first.kind], review: true };
+  const saved = restoreLearning(JSON.stringify({ version: 1, records, session, config }), QUESTION_BANK);
+  assert.deepEqual(saved.session, session);
+  assert.deepEqual(saved.records, records);
+  assert.deepEqual(saved.config, config);
+  assert.equal(saved.session.answers[1], "");
+  assert.equal(saved.session.answers[2], null);
+});
+
+test("invalid storage and outdated question IDs are handled without losing valid history", () => {
+  assert.equal(restoreLearning("{broken", QUESTION_BANK).session, null);
+  assert.equal(restoreLearning(JSON.stringify({ version: 99 }), QUESTION_BANK).session, null);
+  const first = QUESTION_BANK[0];
+  const records = { [first.id]: { attempts: 1, errors: 1, lastCorrect: false },
+    removed: { attempts: 2, errors: 2, lastCorrect: false }, bad: { attempts: -1 } };
+  const stored = { version: 1, records, session: {
+    ids: [first.id, "removed"], index: 0, answers: [], draft: "" },
+    config: { count: 100, categories: ["unknown", first.category], kinds: ["unknown"] } };
+  const saved = restoreLearning(JSON.stringify(stored), QUESTION_BANK);
+  assert.deepEqual(Object.keys(saved.records), [first.id]);
+  assert.equal(saved.session, null);
+  assert.equal(saved.config.count, 20);
+  assert.deepEqual(saved.config.categories, [first.category]);
+  assert.deepEqual(saved.config.kinds, []);
 });
