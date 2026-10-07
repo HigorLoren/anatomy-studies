@@ -52,7 +52,7 @@ function App() {
   }
 
   return (
-    <div class="mx-auto max-w-[1600px] px-6 md:px-12">
+    <div class="app-shell mx-auto max-w-[1600px] px-4 md:px-8 xl:px-12">
       <AppHeader
         isExplore={mode === "explore"}
         onPractice={() => setMode("intro")}

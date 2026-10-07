@@ -32,3 +32,37 @@
   user-select: none;
   -webkit-touch-callout: none;
 }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 68px;
+  border-bottom: 1px solid #dce5eb;
+  padding: 12px 0;
+}
+.app-brand { display: flex; align-items: center; gap: 8px; color: #183648; font-size: 20px; font-weight: 600; letter-spacing: -.6px; text-decoration: none; }
+.app-brand-mark { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; color: white; background: #183648; font: 26px Georgia, serif; }
+.app-mode-nav { display: flex; gap: 3px; padding: 3px; border-radius: 12px; background: #e9eef3; }
+.app-mode-nav button { min-height: 36px; padding: 6px 10px; border-radius: 9px; color: #637782; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.app-mode-nav .is-active { background: white; color: #183648; font-weight: 500; box-shadow: 0 1px 3px #18364814; }
+.app-mode-nav button:focus-visible,
+.viewer-icon-button:focus-visible,
+.viewer-model-picker select:focus-visible,
+.viewer-paint-toggle:has(input:focus-visible),
+.practice-hint-button:focus-visible,
+.quiz-actions button:focus-visible,
+.explore-context button:focus-visible,
+.explore-context summary:focus-visible { outline: 2px solid #236783; outline-offset: 4px; }
+
+@media (min-width: 1024px) {
+  .app-header { min-height: 76px; }
+  .app-brand { font-size: 24px; gap: 10px; }
+  .app-mode-nav button { padding-inline: 16px; font-size: 13px; }
+}
+@media (max-width: 360px) {
+  .app-brand { font-size: 18px; gap: 6px; }
+  .app-brand-mark { width: 26px; height: 26px; font-size: 24px; }
+  .app-mode-nav button { padding-inline: 7px; font-size: 11px; }
+}
