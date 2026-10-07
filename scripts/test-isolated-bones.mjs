@@ -69,7 +69,8 @@ test("muscles sharing textures are selected by anatomical node and all heads sta
       "Rib (1st).r", "Rib (12th).r", "Costal cart of 1st.rib.r",
       "10th rib art cart of head.r", "annulus fibrosus C2 C3", "Nucleus pulposus T1-L1",
       "Vertebra L3 art cart.", "art cart of Atlas  C1", "art cart of sacrum lumbosacral joint",
-      "Disc", "Disc.001", "Bursae"]
+      "Disc", "Disc.001", "Bursae", "Subclavius muscle.r", "Costoclavicular ligament.r",
+      "Interclavicular ligament.r", "Sternoclavicular capsule.r"]
       .map((name) => {
         const mesh = CreateBox(name, { size: 1 }, scene);
         mesh.material = new PBRMaterial(name, scene);
@@ -106,7 +107,7 @@ test("muscles sharing textures are selected by anatomical node and all heads sta
   }
 });
 
-test("deep muscle exposure removes its covers without removing other regional muscles", () => {
+test("deep exposure removes rectus femoris and preserves both heads in the soleus window", () => {
   const engine = new NullEngine();
   const scene = new Scene(engine);
   try {
@@ -125,8 +126,8 @@ test("deep muscle exposure removes its covers without removing other regional mu
     assert(meshes[0].isEnabled());
     assert(meshes[1].isEnabled());
     assert(meshes[2].isEnabled());
-    assert.equal(meshes[3].isEnabled(), false);
-    assert.equal(meshes[4].isEnabled(), false);
+    assert(meshes[3].isEnabled());
+    assert(meshes[4].isEnabled());
     assert(meshes[5].isEnabled());
     applyMuscleLayer(meshes, false, "Soleus");
     assert(meshes.every((mesh) => mesh.isEnabled()));

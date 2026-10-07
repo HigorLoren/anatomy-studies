@@ -3,3 +3,11 @@ dist/
 *.tsbuildinfo
 .DS_Store
 .vercel
+
+# Configuração local e credenciais
+.env
+.env.*
+!.env.example
+*.log
+.scratch/
+dist-readable/

@@ -5,7 +5,10 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { Scene } from "@babylonjs/core/scene";
 import { materialKey } from "./bones";
 
-type Pin = { mesh: AbstractMesh; localPoint: Vector3; localNormal: Vector3; sizeScale: number };
+type Pin = {
+  mesh: AbstractMesh; localPoint: Vector3; localNormal: Vector3;
+  sizeScale: number; window?: boolean;
+};
 
 export function createMusclePins(scene: Scene, camera: ArcRotateCamera) {
   const pins = new Map<string, Pin>();
@@ -13,11 +16,13 @@ export function createMusclePins(scene: Scene, camera: ArcRotateCamera) {
     configure(keys: string[], radius = 1) {
       for (const key of keys) {
         const previous = pins.get(key);
-        if (previous && !previous.mesh.isDisposed()) continue;
+        if (previous && !previous.mesh.isDisposed()
+          && previous.window === Boolean(previous.mesh.metadata?.soleusWindow)) continue;
+        pins.delete(key);
         const meshes = scene.meshes.filter((mesh) => mesh.getTotalVertices() > 0 &&
           materialKey(mesh.material?.name ?? "").replace(/[._][lr]$/, "") === key);
         const pin = surfacePin(scene, camera, meshes, radius);
-        if (pin) pins.set(key, pin);
+        if (pin) { pin.window = Boolean(pin.mesh.metadata?.soleusWindow); pins.set(key, pin); }
       }
     },
     surface(key: string) {
@@ -42,9 +47,10 @@ function surfacePin(
     const size = box.maximumWorld.subtract(box.minimumWorld);
     const reach = Math.max(size.length(), camera.radius) * 2;
     const towardCamera = camera.position.subtract(box.centerWorld).normalize();
-    for (const direction of surfaceDirections(towardCamera)) {
-      for (const [x, y] of [[0, 0], [-0.2, 0], [0.2, 0], [0, -0.2], [0, 0.2]]) {
-        const center = box.centerWorld.add(new Vector3(size.x * x, size.y * y, 0));
+    const { center: preferredCenter, directions, samples } = pinSearch(mesh, towardCamera);
+    for (const direction of directions) {
+      for (const [x, y] of samples) {
+        const center = preferredCenter.add(new Vector3(size.x * x, size.y * y, 0));
         const origin = center.add(direction.scale(reach));
         const hit = scene.pickWithRay(new Ray(origin, direction.negate()), studyGeometry);
         if (hit?.pickedMesh !== mesh || !hit.pickedPoint) continue;
@@ -120,4 +126,16 @@ function pinSurface(pin?: Pin) {
   return { sizeScale: pin.sizeScale, point: Vector3.TransformCoordinates(pin.localPoint, world),
     normal: Vector3.TransformNormal(pin.localNormal,
       Matrix.Transpose(Matrix.Invert(world))).normalize() };
+}
+
+function pinSearch(mesh: AbstractMesh, towardCamera: Vector3) {
+  const window = mesh.metadata?.soleusWindow as
+    { center: Vector3; posterior: Vector3 } | undefined;
+  return {
+    center: window?.center ?? mesh.getBoundingInfo().boundingBox.centerWorld,
+    directions: window ? [window.posterior] : surfaceDirections(towardCamera),
+    samples: window
+      ? [[0, 0], [-0.08, 0], [0.08, 0], [0, -0.08], [0, 0.08]]
+      : [[0, 0], [-0.2, 0], [0.2, 0], [0, -0.2], [0, 0.2]],
+  };
 }
