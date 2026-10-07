@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+<title id="title">Anatomy Studies</title><desc id="desc">Explore, pratique e revise anatomia humana. Ilustração abstrata de uma coluna vertebral.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#102f36"/><stop offset="1" stop-color="#071a22"/></linearGradient><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#c4e7da" stroke-opacity=".05"/></pattern></defs>
+<rect width="1200" height="360" rx="20" fill="url(#bg)"/><rect width="1200" height="360" fill="url(#grid)"/>
+<circle cx="980" cy="180" r="132" fill="none" stroke="#78c6ae" stroke-opacity=".22"/><circle cx="980" cy="180" r="105" fill="none" stroke="#78c6ae" stroke-opacity=".12"/>
+<g fill="#d2e8dc" stroke="#92baa8" stroke-width="2">
+<path d="M963 67q17-9 34 0l5 21-12 9h-19l-13-9z"/><path d="M960 109q20-10 40 0l7 22-15 10h-24l-15-10z"/><path d="M956 153q24-11 48 0l8 23-17 11h-30l-17-11z"/><path d="M952 200q28-12 56 0l9 25-20 11h-34l-20-11z"/><path d="M948 250q32-13 64 0l10 25-23 12h-38l-23-12z"/>
+</g><g stroke="#78c6ae" stroke-width="2" fill="none"><path d="M954 173h-44l-32 25h-34M1009 224h42l27-24h49"/><circle cx="953" cy="173" r="5" fill="#78c6ae"/><circle cx="1010" cy="224" r="5" fill="#78c6ae"/></g>
+<text x="70" y="99" fill="#81ceb4" font-family="Arial, sans-serif" font-size="15" letter-spacing="4">ANATOMIA HUMANA · ESTUDO INTERATIVO</text>
+<text x="66" y="173" fill="#f0f4e9" font-family="Arial, sans-serif" font-weight="700" font-size="64">Anatomy Studies</text>
+<text x="70" y="224" fill="#b8d0c8" font-family="Arial, sans-serif" font-size="24">Explore. Pratique. Revise.</text>
+<path d="M70 270h45" stroke="#81ceb4" stroke-width="3"/><text x="130" y="277" fill="#b8d0c8" font-family="Arial, sans-serif" font-size="17">Atlas 3D / Questões práticas / Aprendizagem ativa</text>
+</svg>
