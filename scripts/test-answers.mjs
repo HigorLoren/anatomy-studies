@@ -192,6 +192,13 @@ test("muscle identification keeps six alternatives present in the prepared disse
   }
 });
 
+test("soleus identification offers six muscles in the leg, including gastrocnemius", () => {
+  const question = QUESTION_BANK.find(item => item.id === "muscle-identify-Soleus");
+  assert.deepEqual([...question.markers].sort(), ["Soleus", "Gastrocnemius", "Tibialis anterior",
+    "Fibularis longus", "Fibularis brevis", "Extensor digitorum longus"].sort());
+  assert.equal(question.markers[Number(question.answer) - 1], "Soleus");
+});
+
 test("multiple blanks accept separators and preserve meaningful order", () => {
   assert.equal(classifyAnswer(simulated(31), "m. subescapular, m. supraespinal, m. redondo menor e m. infraespinal"), "correct");
   assert.equal(classifyAnswer(simulated(31), "supraespinal; supraespinal; redondo menor; subescapular"), "incorrect");

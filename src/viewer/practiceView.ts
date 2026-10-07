@@ -34,6 +34,11 @@ function faceMarkedMuscle(camera: ArcRotateCamera, scene: Scene, target?: string
     && materialKey(mesh.material?.name ?? "") === target);
   if (!muscles.length) return;
   camera.beta = Math.PI / 2;
+  const window = muscles.find(mesh => mesh.metadata?.soleusWindow)?.metadata.soleusWindow;
+  if (window) {
+    camera.alpha = Math.atan2(window.posterior.z, window.posterior.x);
+    return;
+  }
   let bestAlpha = camera.alpha;
   let bestScore = -1;
   for (let index = 0; index < 8; index++) {

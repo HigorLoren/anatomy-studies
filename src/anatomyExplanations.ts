@@ -106,7 +106,7 @@ const REVIEW_TOPICS: ReviewTopic[] = [
   { items: [65], title: "Glúteo máximo: região posterior do quadril",
     text: "O glúteo máximo é um músculo volumoso da região posterior do quadril, superficial aos glúteos médio e mínimo. A musculatura glútea ocupa uma região diferente dos músculos anteriores da coxa, como o quadríceps. Use a região e a profundidade para reconhecer a peça." },
   { items: [66, 67, 68], title: "Panturrilha: gastrocnêmio, sóleo e tendão",
-    text: "O gastrocnêmio possui cabeças medial e lateral e fica superficial ao sóleo. Juntos, eles formam o tríceps sural e convergem para o tendão do calcâneo, inserido no calcâneo. O tendão transmite a força da contração; não é o ventre muscular. A camada com gastrocnêmio removido permite ver o sóleo." },
+    text: "O gastrocnêmio possui cabeças medial e lateral e fica superficial ao sóleo. Juntos, eles formam o tríceps sural e convergem para o tendão do calcâneo, inserido no calcâneo. O tendão transmite a força da contração; não é o ventre muscular. Na peça preparada, as cabeças do gastrocnêmio são afastadas para expor parte do sóleo." },
   { items: [69, 70], title: "Meninges: da superfície para a profundidade",
     text: "A sequência das meninges é dura-máter, aracnoide-máter e pia-máter. A dura-máter é a mais externa; a pia-máter acompanha a superfície do tecido nervoso. Aracnoide e pia, em conjunto, formam a leptomeninge. O líquido cerebrospinal ocupa o espaço subaracnóideo, entre aracnoide e pia." },
   { items: [71], title: "Medula espinal: parte do SNC",

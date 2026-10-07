@@ -1,3 +1,7 @@
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { VertexBuffer } from "@babylonjs/core/Buffers/buffer";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { PBRMaterial } from "@babylonjs/core/Materials/PBR/pbrMaterial";
 import type { Node } from "@babylonjs/core/node";
 import type { Scene } from "@babylonjs/core/scene";
@@ -70,9 +74,69 @@ function isAxialStructure(names: string[]) {
 }
 
 export function applyMuscleLayer(meshes: Scene["meshes"], exposeDeep: boolean, target?: string) {
+  prepareSoleusWindow(meshes, exposeDeep && target === "Soleus");
   const covers = target ? muscleExposure(target) : SUPERFICIAL_COVERS;
   for (const mesh of meshes) {
     const names: string[] | undefined = mesh.metadata?.anatomyNodes;
     if (names) mesh.setEnabled(!(exposeDeep && names.some((name) => covers.includes(name))));
   }
+}
+
+// Retraction is reversible and leaves the proximal and distal attachments in place.
+const gastrocnemiusGeometry = new WeakMap<Mesh, {
+  positions: number[]; normals: number[]; opened: boolean;
+}>();
+
+function prepareSoleusWindow(meshes: Scene["meshes"], opened: boolean) {
+  const soleus = meshes.find(mesh => mesh.metadata?.anatomyNodes?.includes("Soleus muscle"));
+  const heads = meshes.filter(mesh => mesh instanceof Mesh && mesh.metadata?.anatomyNodes?.some(
+    (name: string) => /^(Lateral|Medial) head of gastrocnemius$/.test(name),
+  )) as Mesh[];
+  if (!soleus || heads.length < 2) return;
+  soleus.computeWorldMatrix(true);
+  const box = soleus.getBoundingInfo().boundingBox;
+  const width = box.maximumWorld.x - box.minimumWorld.x;
+  // glTF's posterior (-Z) is transformed by the imported root into scene coordinates.
+  const posterior = Vector3.TransformNormal(
+    new Vector3(0, 0, -1), soleus.getWorldMatrix(),
+  ).normalize();
+  soleus.metadata.soleusWindow = opened ? {
+    center: box.centerWorld.add(new Vector3(0, (box.maximumWorld.y - box.minimumWorld.y) * 0.2, 0)),
+    posterior,
+  } : undefined;
+  for (const head of heads) retractHead(head, opened, box.centerWorld.x, width);
+}
+
+function retractHead(head: Mesh, opened: boolean, centerX: number, width: number) {
+  let original = gastrocnemiusGeometry.get(head);
+  if (!original) {
+    const positions = head.getVerticesData(VertexBuffer.PositionKind);
+    const normals = head.getVerticesData(VertexBuffer.NormalKind);
+    if (!positions || !normals) return;
+    original = { positions: Array.from(positions), normals: Array.from(normals), opened: false };
+    gastrocnemiusGeometry.set(head, original);
+  }
+  if (original.opened === opened) return;
+  head.makeGeometryUnique();
+  const positions = original.positions.slice();
+  const normals = original.normals.slice();
+  if (opened) {
+    const world = head.computeWorldMatrix(true);
+    const inverse = Matrix.Invert(world);
+    const bounds = head.getBoundingInfo().boundingBox;
+    const height = bounds.maximumWorld.y - bounds.minimumWorld.y;
+    const sign = Math.sign(bounds.centerWorld.x - centerX) || 1;
+    for (let i = 0; i < positions.length; i += 3) {
+      const point = Vector3.TransformCoordinates(Vector3.FromArray(positions, i), world);
+      const fraction = Math.max(0, Math.min(1, (point.y - bounds.minimumWorld.y) / height));
+      point.x += sign * width * 0.24 * Math.sin(Math.PI * fraction) ** 2;
+      Vector3.TransformCoordinates(point, inverse).toArray(positions, i);
+    }
+    VertexData.ComputeNormals(positions, head.getIndices() ?? [], normals);
+  }
+  head.setVerticesData(VertexBuffer.PositionKind, positions, true);
+  head.setVerticesData(VertexBuffer.NormalKind, normals, true);
+  head.refreshBoundingInfo();
+  head.computeWorldMatrix(true);
+  original.opened = opened;
 }

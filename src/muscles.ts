@@ -23,6 +23,12 @@ export const MUSCLE_DISTRACTORS = [
   { key: "Sartorius", name: "sartório", model: "lower-muscles-practice", nodes: ["Sartorius muscle"] },
   { key: "Tibialis anterior", name: "tibial anterior", model: "lower-muscles-practice",
     nodes: ["Tibialis anterior muscle"] },
+  { key: "Fibularis longus", name: "fibular longo", model: "lower-muscles-practice",
+    nodes: ["Fibularis longus muscle"] },
+  { key: "Fibularis brevis", name: "fibular curto", model: "lower-muscles-practice",
+    nodes: ["Fibularis brevis muscle"] },
+  { key: "Extensor digitorum longus", name: "extensor longo dos dedos", model: "lower-muscles-practice",
+    nodes: ["Extensor digitorum longus"] },
 ];
 
 const SHOULDER_COVERS = [
@@ -35,7 +41,6 @@ export function muscleExposure(target: string): string[] {
     return SHOULDER_COVERS;
   }
   if (target === "Vastus intermedius") return ["Rectus femoris"];
-  if (target === "Soleus") return ["Lateral head of gastrocnemius", "Medial head of gastrocnemius"];
   return [];
 }
 
@@ -50,12 +55,16 @@ export function muscleNamingQuestion(question: Question): Question {
   return { ...question, model: muscle.model, highlight: muscle.key };
 }
 
+export const CALF_MUSCLE_KEYS = ["Soleus", "Gastrocnemius", "Fibularis longus", "Fibularis brevis",
+  "Tibialis anterior", "Extensor digitorum longus"];
+
 export function createMuscleQuestions(): Question[] {
   return MUSCLES.flatMap((muscle) => {
     const category = muscle.model === "upper-muscles-practice" ? "upper" : "lower";
     const covers = muscleExposure(muscle.key);
     const group = [...MUSCLES, ...MUSCLE_DISTRACTORS].filter((item) =>
-      item.model === muscle.model && !item.nodes.some((node) => covers.includes(node)),
+      item.model === muscle.model && !item.nodes.some((node) => covers.includes(node))
+      && (muscle.key !== "Soleus" || CALF_MUSCLE_KEYS.includes(item.key)),
     ).slice(0, 6);
     for (let index = group.length - 1; index > 0; index--) {
       const other = Math.floor(Math.random() * (index + 1));

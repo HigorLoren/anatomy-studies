@@ -106,7 +106,7 @@ test("muscles sharing textures are selected by anatomical node and all heads sta
   }
 });
 
-test("deep muscle exposure removes its covers without removing other regional muscles", () => {
+test("deep exposure removes rectus femoris and preserves both heads in the soleus window", () => {
   const engine = new NullEngine();
   const scene = new Scene(engine);
   try {
@@ -125,8 +125,8 @@ test("deep muscle exposure removes its covers without removing other regional mu
     assert(meshes[0].isEnabled());
     assert(meshes[1].isEnabled());
     assert(meshes[2].isEnabled());
-    assert.equal(meshes[3].isEnabled(), false);
-    assert.equal(meshes[4].isEnabled(), false);
+    assert(meshes[3].isEnabled());
+    assert(meshes[4].isEnabled());
     assert(meshes[5].isEnabled());
     applyMuscleLayer(meshes, false, "Soleus");
     assert(meshes.every((mesh) => mesh.isEnabled()));

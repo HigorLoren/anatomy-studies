@@ -16,7 +16,7 @@ import { createIsolatedBones } from "./isolatedBones";
 import { applyMuscleLayer, prepareMuscleMeshes } from "./muscleMeshes";
 import { SPINE_PIECES, type ModelId } from "../models";
 import { materialKey } from "./bones";
-import { preparedMuscleFile } from "../muscles";
+import { CALF_MUSCLE_KEYS, preparedMuscleFile } from "../muscles";
 import type { Exercise, ViewerStatus } from "./types";
 
 const NATURAL_MODEL = "overview-skull-natural";
@@ -187,7 +187,9 @@ function bounds(meshes: Scene["meshes"]) {
 }
 
 function practiceBounds(geometry: Scene["meshes"], exercise: Exercise) {
-  const regionalMuscles = geometry.filter((mesh) => mesh.metadata?.muscleTarget);
+  const regionalMuscles = geometry.filter((mesh) => mesh.metadata?.muscleTarget
+    && (exercise?.muscleTarget !== "Soleus"
+      || CALF_MUSCLE_KEYS.includes(mesh.material?.name ?? "")));
   return bounds(exercise?.muscleTarget && regionalMuscles.length ? regionalMuscles : geometry);
 }
 
