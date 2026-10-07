@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" role="img" aria-labelledby="title desc">
+<title id="title">LCA e LCP: fixação tibial e movimento que cada um limita</title>
+<desc id="desc">Esquemas separados de perfil, frente à esquerda e atrás à direita. Com fêmur parado, LCA limita a tíbia indo para a frente e LCP limita a tíbia indo para trás. Setas mostram os deslocamentos limitados.</desc>
+<defs><marker id="arrowA" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#138078"/></marker><marker id="arrowP" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8Z" fill="#ac4f21"/></marker></defs>
+<g font-family="Avenir Next, Segoe UI, sans-serif" font-size="20" fill="#183648">
+<rect x="8" y="8" width="342" height="395" rx="12" fill="#eef7f4"/><rect x="370" y="8" width="342" height="395" rx="12" fill="#faf1ec"/>
+<text x="28" y="42" font-size="27" font-weight="600" fill="#138078">LCA</text><text x="390" y="42" font-size="27" font-weight="600" fill="#ac4f21">LCP</text>
+<text x="28" y="76">Frente</text><text x="265" y="76">Atrás</text><text x="390" y="76">Frente</text><text x="627" y="76">Atrás</text>
+<g fill="#dceaf1" stroke="#183648" stroke-width="2"><rect x="58" y="103" width="243" height="49" rx="10"/><rect x="58" y="240" width="243" height="49" rx="10"/><rect x="420" y="103" width="243" height="49" rx="10"/><rect x="420" y="240" width="243" height="49" rx="10"/></g>
+<text x="99" y="134">Fêmur parado</text><text x="461" y="134">Fêmur parado</text>
+<path d="M103 240L248 152" stroke="#138078" stroke-width="12"/><circle cx="103" cy="240" r="9" fill="#138078"/>
+<path d="M616 240L465 152" stroke="#ac4f21" stroke-width="12"/><circle cx="616" cy="240" r="9" fill="#ac4f21"/>
+<text x="155" y="272">Tíbia</text><text x="517" y="272">Tíbia</text>
+<text x="75" y="195" fill="#138078">Fixa na frente</text><text x="459" y="195" fill="#ac4f21">Fixa atrás</text>
+<path d="M176 316H64" stroke="#138078" stroke-width="4" marker-end="url(#arrowA)"/><path d="M536 316H650" stroke="#ac4f21" stroke-width="4" marker-end="url(#arrowP)"/>
+<text x="28" y="362" fill="#138078">Limita a tíbia para a frente</text><text x="390" y="362" fill="#ac4f21">Limita a tíbia para trás</text>
+<text x="20" y="430" font-size="18">Setas = movimentos limitados. Esquemas de perfil, sem escala.</text>
+<text x="20" y="452" font-size="18">Os ligamentos estão separados aqui para facilitar a comparação.</text>
+</g></svg>

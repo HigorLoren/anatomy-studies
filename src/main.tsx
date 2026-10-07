@@ -7,6 +7,7 @@ import type { ViewerStatus } from "./viewer";
 import { QuestionNavigator } from "./components/molecules/QuestionNavigator";
 import { AppHeader } from "./components/molecules/AppHeader";
 import { ExploreScreen } from "./screens/ExploreScreen";
+import { TipsScreen } from "./screens/TipsScreen";
 import { IntroScreen } from "./screens/IntroScreen";
 import { QuizScreen } from "./screens/QuizScreen";
 import { ResultScreen } from "./screens/ResultScreen";
@@ -15,15 +16,40 @@ import { DEFAULT_MODEL, type ModelId } from "./models";
 import { QUESTION_BANK, createTest, type TestConfig } from "./questions";
 import "./style.css";
 
-type Mode = "intro" | "quiz" | "result" | "explore" | "bank" | "free";
+type Mode = "intro" | "quiz" | "result" | "explore" | "bank" | "free" | "tips";
+
+function mainClass(mode: Mode): string {
+  const layouts: Partial<Record<Mode, string>> = {
+    explore: "explore-main", tips: "tips-main mx-auto w-full max-w-7xl",
+    intro: "mx-auto w-full max-w-5xl pt-6 md:pt-12",
+    quiz: "practice-main practice-main--quiz w-full",
+    free: "practice-main practice-main--free w-full",
+  };
+  return `grid gap-6 py-6 ${layouts[mode] ?? "mx-auto w-full max-w-3xl sm:pt-3"}`;
+}
+
+function initialMode(): Mode {
+  return new URLSearchParams(window.location.search).get("pagina") === "dicas"
+    || window.location.hash === "#dicas" ? "tips" : "intro";
+}
 
 function App() {
-  const [mode, setMode] = useState<Mode>("intro");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [model, setModel] = useState<ModelId>(DEFAULT_MODEL);
   const [status, setStatus] = useState<ViewerStatus>("loading");
   const learning = useLearning();
   const test = usePractice(learning.data.session, learning.record, learning.saveSession);
   const free = usePractice(null, learning.record);
+
+  function navigate(next: Mode) {
+    const url = new URL(window.location.href);
+    url.hash = "";
+    if (next === "tips") url.searchParams.set("pagina", "dicas");
+    else url.searchParams.delete("pagina");
+    window.history.replaceState(null, "", url);
+    setMode(next);
+    window.scrollTo(0, 0);
+  }
 
   const practice = mode === "free" ? free : test;
 
@@ -54,20 +80,15 @@ function App() {
     <div class="app-shell mx-auto max-w-[1600px] px-4 md:px-8 xl:px-12">
       <AppHeader
         isExplore={mode === "explore"}
-        onPractice={() => setMode("intro")}
-        onExplore={() => setMode("explore")}
+        isTips={mode === "tips"}
+        onTips={() => navigate("tips")}
+        onPractice={() => navigate("intro")}
+        onExplore={() => navigate("explore")}
       />
       <main
-        class={`grid gap-6 py-6 ${
-          mode === "explore"
-            ? "explore-main"
-            : mode === "intro"
-            ? "mx-auto w-full max-w-5xl pt-6 md:pt-12"
-            : ["quiz", "free"].includes(mode)
-            ? `practice-main practice-main--${mode} w-full`
-            : "mx-auto w-full max-w-3xl sm:pt-3"
-        }`}
+        class={mainClass(mode)}
       >
+        {mode === "tips" && <TipsScreen />}
         {mode === "intro" && (
           <IntroScreen onStart={start} onBank={() => setMode("bank")}
             onResume={() => setMode("quiz")} progress={learning.data}

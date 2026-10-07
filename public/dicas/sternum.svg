@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 500" role="img" aria-labelledby="title">
+  <title id="title">Esterno: manúbrio como cabo, corpo como lâmina e xifoide como ponta</title>
+  <g stroke="#183648" stroke-width="2" stroke-linejoin="round">
+    <path d="M45 18L78 34L104 18L153 43L136 142H44L20 43Z" fill="#b9d8cc"/>
+    <path d="M44 154H136L125 387H55Z" fill="#dceaf1"/>
+    <path d="M68 400H112L90 477Z" fill="#eac9b9"/>
+    <path d="M140 84H180M130 267H180M109 427H180" fill="none"/>
+  </g>
+  <g font-family="Avenir Next, Segoe UI, sans-serif" fill="#183648" font-size="21">
+    <text x="190" y="78">Manúbrio</text><text x="190" y="106" font-weight="600">Cabo</text>
+    <text x="190" y="262">Corpo</text><text x="190" y="290" font-weight="600">Lâmina</text>
+    <text x="190" y="422">Xifoide</text><text x="190" y="450" font-weight="600">Ponta</text>
+  </g>
+</svg>

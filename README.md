@@ -92,3 +92,9 @@ Nas questões de denominação de músculos, o marcador é uma bandeirinha azul 
 ## Modelos disponíveis no Explorar 3D
 
 O seletor de modelos oferece as 12 visualizações-base, incluindo os modelos usados nas perguntas: crânios, coluna completa, coluna cervical, vértebras separadas, tórax, esqueleto, ossos dos membros e peças musculares preparadas. O seletor “Peça ou camada” permite abrir os conjuntos, ossos isolados e peças com estruturas vizinhas das perguntas, alternar as coberturas do membro superior e expor o vasto intermédio ou o sóleo no membro inferior. Essas opções são definidas em `src/exploration.ts`, reutilizando as peças da base de questões e os mesmos GLBs preparados. Na exploração, tocar nas estruturas mostra o nome e permite pintá-las; os marcadores de prova são omitidos. Os seletores também ficam disponíveis em tela cheia.
+
+## Página de dicas de anatomia
+
+A aba **Dicas** abre uma consulta rápida com 29 tópicos em cinco grupos: terminologia e planos, encéfalo e meninges, ossos, articulações e joelho, músculos e tendão calcâneo. A URL `?pagina=dicas` abre a página diretamente e mantém o acesso após recarregar ou seguir uma âncora de assunto. A busca ignora acentos e capitalização; a impressão usa uma folha de estilos própria.
+
+Os conteúdos estão em `src/cheatsheet/content.ts`, as referências em `src/cheatsheet/sources.ts` e os 14 diagramas SVG originais em `public/dicas/`. Cada tópico contém um macete, explicação, alertas e fontes. PAD e donut têm referências de ensino universitário; o joinha do rádio tem um relato de aluno, identificado como tal. As demais dicas usam associações de nomes, formas e movimentos. As referências da internet e as correções de conceitos estão em `docs/dicas-anatomia.md`.

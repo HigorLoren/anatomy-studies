@@ -1,11 +1,15 @@
 type AppHeaderProps = {
   isExplore: boolean;
+  isTips: boolean;
+  onTips: () => void;
   onPractice: () => void;
   onExplore: () => void;
 };
 
 export function AppHeader({
   isExplore,
+  isTips,
+  onTips,
   onPractice,
   onExplore,
 }: AppHeaderProps) {
@@ -29,8 +33,8 @@ export function AppHeader({
         aria-label="Modo de estudo"
       >
         <button
-          class={!isExplore ? "is-active" : ""}
-          aria-pressed={!isExplore}
+          class={!isExplore && !isTips ? "is-active" : ""}
+          aria-pressed={!isExplore && !isTips}
           onClick={onPractice}
         >
           Praticar
@@ -42,6 +46,8 @@ export function AppHeader({
         >
           Explorar 3D
         </button>
+        <button class={isTips ? "is-active" : ""}
+          aria-pressed={isTips} onClick={onTips}>Dicas</button>
       </nav>
     </header>
   );
