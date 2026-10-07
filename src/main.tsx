@@ -64,7 +64,9 @@ function App() {
             ? "explore-main"
             : mode === "intro"
             ? "mx-auto w-full max-w-5xl pt-6 md:pt-12"
-            : "mx-auto max-w-3xl sm:pt-3"
+            : ["quiz", "free"].includes(mode)
+            ? `practice-main practice-main--${mode} w-full`
+            : "mx-auto w-full max-w-3xl sm:pt-3"
         }`}
       >
         {mode === "intro" && (

@@ -2,10 +2,11 @@ import { useState } from "preact/hooks";
 import { AtlasViewer, type AtlasViewerProps } from "./AtlasViewer";
 import { practicalHintBones } from "../../practicalHints";
 import type { Question } from "../../questions";
+import type { ComponentChildren } from "preact";
 
-type Props = AtlasViewerProps & { question: Question };
+type Props = AtlasViewerProps & { question: Question; children: ComponentChildren };
 
-export function PracticalViewer({ question, ...viewerProps }: Props) {
+export function PracticalViewer({ question, children, ...viewerProps }: Props) {
   const [showHint, setShowHint] = useState(false);
   const neighbors = practicalHintBones(question);
   const exercise = showHint ? {
@@ -15,12 +16,13 @@ export function PracticalViewer({ question, ...viewerProps }: Props) {
   } : viewerProps.exercise;
 
   return (
-    <>
+    <div class="practical-workspace">
       <AtlasViewer {...viewerProps} exercise={exercise} />
+      <aside class="practice-answer-panel" aria-label="Resposta da questão">
       {neighbors.length > 0 && (
-        <div class="mb-4 flex flex-wrap items-center gap-3">
+        <div class="practice-hint">
           <button type="button" aria-pressed={showHint}
-            class="rounded-xl border border-slate-300 px-4 py-2 text-sm text-accent"
+            class="practice-hint-button"
             onClick={() => setShowHint((current) => !current)}>
             <span aria-hidden="true">✧</span>
             {showHint ? "Ocultar estruturas vizinhas" : "Mostrar estruturas vizinhas"}
@@ -30,6 +32,8 @@ export function PracticalViewer({ question, ...viewerProps }: Props) {
           </p>}
         </div>
       )}
-    </>
+      {children}
+      </aside>
+    </div>
   );
 }

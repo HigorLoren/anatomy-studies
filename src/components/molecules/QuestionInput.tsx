@@ -25,7 +25,7 @@ export function QuestionInput({
   const complete = question.kind === "complete";
   return (
     <>
-      <label class="mb-3 block text-sm leading-6 font-medium mt-8" for="answer">
+      <label class="mb-2 block text-sm leading-6 font-medium" for="answer">
         {complete
           ? "Termos que completam a frase"
           : question.kind === "compare" ? "Sua resposta" : "Nome da estrutura"}

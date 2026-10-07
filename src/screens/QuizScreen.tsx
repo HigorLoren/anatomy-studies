@@ -74,8 +74,15 @@ export function QuizScreen(props: QuizScreenProps) {
 
   const exercise = getExercise(question, answer, checked, correct);
 
+  const showViewer = Boolean(question.model || question.kind === "identify" ||
+    (question.kind === "name" && question.highlight));
+  const form = <QuizForm {...{
+    total, free, answer, checked, correct, index, question, status,
+    onAdvance, onAnswer, onCheck, onSkip,
+  }} />;
+
   return (
-    <section class="flex min-w-0 items-center">
+    <section class={`quiz-screen ${showViewer ? "quiz-screen--visual" : "quiz-screen--written"}`}>
       <div class="min-w-0 w-full">
         <div class="flex justify-between gap-4 text-xs text-muted">
           <span class="shrink-0" aria-label={`Questão ${index + 1} de ${total}`}>
@@ -85,20 +92,13 @@ export function QuizScreen(props: QuizScreenProps) {
           <span>{questionKinds[question.kind]}</span>
         </div>
         <ProgressBar current={index} total={total} />
-        {question.kind === "name" && exercise?.clayTarget && (
-          <p class="mb-3 flex items-center gap-2 text-xs text-muted">
-            <span class="h-3 w-3 shrink-0 rounded-sm border-2 border-blue-500" aria-hidden="true" />
-            A massinha azul indica a estrutura a nomear.
-          </p>
-        )}
         {!hasAnswerBlanks(question) && <>
-        <h1 class="mb-2 text-[clamp(2rem,3vw,2.6rem)] leading-[1.13] font-medium tracking-[-0.045em]">
+        <h1 class="quiz-title">
           {question.title}
         </h1>
-        <p class="text-[14px] text-muted">{question.instruction}</p>
+        <p class="quiz-instruction">{question.instruction}</p>
         </>}
-        {(question.model || question.kind === "identify" ||
-          (question.kind === "name" && question.highlight)) && (
+        {showViewer ? (
           <PracticalViewer
             key={question.id}
             question={question}
@@ -110,24 +110,9 @@ export function QuizScreen(props: QuizScreenProps) {
             questionIndex={index}
             onNumberSelect={onAnswer}
             onStatus={onStatus}
-          />
-        )}
-        <QuizForm
-          {...{
-            total,
-            free,
-            answer,
-            checked,
-            correct,
-            index,
-            question,
-            status,
-            onAdvance,
-            onAnswer,
-            onCheck,
-            onSkip,
-          }}
-        />
+          >{form}</PracticalViewer>
+        ) : form}
+
       </div>
     </section>
   );
