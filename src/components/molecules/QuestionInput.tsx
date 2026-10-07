@@ -1,3 +1,5 @@
+import { hasAnswerBlanks } from "../../answerBlanks";
+import { InlineAnswerBlanks } from "./InlineAnswerBlanks";
 import type { Question } from "../../questions";
 
 type QuestionInputProps = {
@@ -17,6 +19,9 @@ export function QuestionInput({
   viewerReady,
   onAnswer,
 }: QuestionInputProps) {
+  if (hasAnswerBlanks(question)) {
+    return <InlineAnswerBlanks key={question.id} {...{ question, answer, checked, onAnswer }} />;
+  }
   const complete = question.kind === "complete";
   return (
     <>

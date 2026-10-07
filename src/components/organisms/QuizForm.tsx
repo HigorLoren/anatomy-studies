@@ -1,3 +1,4 @@
+import { allBlanksFilled } from "../../answerBlanks";
 import { AnswerFeedback } from "../molecules/AnswerFeedback";
 import { SelectionFeedback } from "../molecules/SelectionFeedback";
 import { MarkerPicker } from "../molecules/MarkerPicker";
@@ -35,7 +36,7 @@ export function QuizForm({
   const identify = question.kind === "identify";
   const complete = isWrittenQuestion(question);
   const viewerReady = status === "ready";
-  const canSubmit = answer.trim() && (complete || viewerReady);
+  const canSubmit = allBlanksFilled(question, answer) && (complete || viewerReady);
   const hint = checked
     ? complete
       ? "Leia a explicação antes de continuar, se quiser."
@@ -50,7 +51,7 @@ export function QuizForm({
         onSubmit={(event) => {
           event.preventDefault();
           if (checked) onAdvance();
-          else onCheck();
+          else if (canSubmit) onCheck();
         }}
       >
         {identify ? (

@@ -1,3 +1,4 @@
+import { hasAnswerBlanks } from "../answerBlanks";
 import { ProgressBar } from "../components/molecules/ProgressBar";
 import { AtlasViewer } from "../components/organisms/AtlasViewer";
 import { QuizForm } from "../components/organisms/QuizForm";
@@ -88,10 +89,12 @@ export function QuizScreen(props: QuizScreenProps) {
             O contorno azul indica a estrutura a nomear.
           </p>
         )}
+        {!hasAnswerBlanks(question) && <>
         <h1 class="mb-2 text-[clamp(2rem,3vw,2.6rem)] leading-[1.13] font-medium tracking-[-0.045em]">
           {question.title}
         </h1>
         <p class="text-[14px] text-muted">{question.instruction}</p>
+        </>}
         {(question.model || question.kind === "identify" ||
           (question.kind === "name" && question.highlight)) && (
           <AtlasViewer
