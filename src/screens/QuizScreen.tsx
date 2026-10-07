@@ -1,3 +1,4 @@
+import { useState } from "preact/hooks";
 import { hasAnswerBlanks } from "../answerBlanks";
 import { ProgressBar } from "../components/molecules/ProgressBar";
 import { PracticalViewer } from "../components/organisms/PracticalViewer";
@@ -72,13 +73,18 @@ export function QuizScreen(props: QuizScreenProps) {
     onStatus,
   } = props;
 
+  const [selectionSequence, setSelectionSequence] = useState(0);
+  const selectAnswer = (value: string) => {
+    if (question.kind === "identify") setSelectionSequence((sequence) => sequence + 1);
+    onAnswer(value);
+  };
   const exercise = getExercise(question, answer, checked, correct);
 
   const showViewer = Boolean(question.model || question.kind === "identify" ||
     (question.kind === "name" && question.highlight));
   const form = <QuizForm {...{
     total, free, answer, checked, correct, index, question, status,
-    onAdvance, onAnswer, onCheck, onSkip,
+    onAdvance, onAnswer: selectAnswer, onCheck, onSkip,
   }} />;
 
   return (
@@ -108,7 +114,8 @@ export function QuizScreen(props: QuizScreenProps) {
             answer={answer}
             checked={checked}
             questionIndex={index}
-            onNumberSelect={onAnswer}
+            onNumberSelect={selectAnswer}
+            selectionSequence={selectionSequence}
             onStatus={onStatus}
           >{form}</PracticalViewer>
         ) : form}

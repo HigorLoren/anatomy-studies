@@ -278,7 +278,9 @@ function practicalQuestion(question: Question): Question {
   return {
     ...question,
     title: "Denomine a estrutura marcada.",
-    instruction: "Gire a peça e identifique a estrutura indicada pela massinha azul.",
+    instruction: question.model?.endsWith("-muscles-practice")
+      ? "Gire a peça e identifique o músculo indicado pela bandeirinha azul."
+      : "Gire a peça e identifique a estrutura indicada pela massinha azul.",
     explanation: question.explanation || question.title,
   };
 }

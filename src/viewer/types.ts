@@ -31,5 +31,6 @@ export type Viewer = {
   exercise(value: Exercise): void;
   reset(view?: "default" | "question"): void;
   zoom(factor: number): void;
+  focusNumber(number: number): void;
   dispose(): void;
 };

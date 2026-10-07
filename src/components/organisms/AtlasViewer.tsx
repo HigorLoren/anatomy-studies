@@ -23,6 +23,7 @@ export type AtlasViewerProps = {
   answer: string;
   checked: boolean;
   questionIndex: number;
+  selectionSequence?: number;
   onNumberSelect: (answer: string) => void;
   onStatus: (status: ViewerStatus) => void;
 };
@@ -35,6 +36,7 @@ export function AtlasViewer({
   answer,
   checked,
   questionIndex,
+  selectionSequence = 0,
   onNumberSelect,
   onStatus,
 }: AtlasViewerProps) {
@@ -78,6 +80,10 @@ export function AtlasViewer({
     () => viewerRef.current?.reset(mode === "quiz" ? "question" : "default"),
     [mode, questionIndex],
   );
+
+  useEffect(() => {
+    if (selectionSequence > 0 && answer) viewerRef.current?.focusNumber(Number(answer));
+  }, [selectionSequence, answer]);
 
   const modelLabel = viewerLabel(mode, model);
 

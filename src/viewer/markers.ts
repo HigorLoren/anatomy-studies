@@ -5,6 +5,7 @@ import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { Scene } from "@babylonjs/core/scene";
 import { visibleSurfaceAnchor } from "./surfaceAnchor";
 import { createClayMarker } from "./clayMarker";
+import { createMuscleFlag } from "./muscleFlag";
 import { createMusclePins } from "./musclePins";
 import { createSurfaceNumbers } from "./surfaceNumbers";
 import { materialKey } from "./bones";
@@ -36,7 +37,7 @@ export function createMarkers({
     clearClay = undefined;
     anchors.clear();
     const numbers = muscleNumberKeys(exercise);
-    musclePins.configure(numbers, modelRadius);
+    musclePins.configure(muscleMarkerKeys(exercise), modelRadius);
     surfaceNumbers.configure(numbers, modelRadius);
     surfaceNumbers.render();
 
@@ -60,7 +61,8 @@ export function createMarkers({
         anchors.set(name, anchor);
         if (name === exercise?.clayTarget) {
           if (surface) {
-            clearClay = createClayMarker(scene, surface.point, modelRadius, surface.normal);
+            clearClay = namingMarker(scene, exercise, mesh!, modelRadius,
+              musclePins.surface(name) ?? surface);
           }
         }
       }
@@ -96,7 +98,7 @@ export function createMarkers({
     }
   };
 
-  return { configure, render };
+  return { configure, render, muscleSurface: musclePins.surface };
 }
 
 function markerSurface(
@@ -193,4 +195,21 @@ function markerTargets(exercise: Exercise) {
 
 function muscleNumberKeys(exercise: Exercise) {
   return exercise?.muscleTarget ? exercise.markers ?? [] : [];
+}
+
+function muscleMarkerKeys(exercise: Exercise) {
+  if (exercise?.muscleTarget && exercise.clayTarget) return [exercise.clayTarget];
+  return muscleNumberKeys(exercise);
+}
+
+function namingMarker(
+  scene: Scene, exercise: Exercise, mesh: Scene["meshes"][number], radius: number,
+  surface: { point: Vector3; normal: Vector3 },
+) {
+  if (!exercise?.muscleTarget) {
+    return createClayMarker(scene, surface.point, radius, surface.normal);
+  }
+  const size = mesh.getBoundingInfo().boundingBox.extendSizeWorld.scale(2);
+  return createMuscleFlag(scene, surface.point, radius, surface.normal,
+    Math.max(size.x, size.y, size.z));
 }

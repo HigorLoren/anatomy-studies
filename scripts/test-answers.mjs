@@ -223,7 +223,8 @@ test("rotator cuff list accepts a plural prefix or individual singular prefixes"
 test("practical naming hides descriptive clues and isolates imported bones", () => {
   for (const question of QUESTION_BANK.filter((item) => item.kind === "name" && item.highlight)) {
     assert.equal(question.title, "Denomine a estrutura marcada.");
-    assert(question.instruction.includes("massinha azul"));
+    assert(question.instruction.includes(question.model?.endsWith("-muscles-practice")
+      ? "bandeirinha azul" : "massinha azul"));
     assert(question.explanation.length > 0);
   }
   for (const number of [7, 8, 9, 10, 12, 13, 14, 16, 17, 18]) {

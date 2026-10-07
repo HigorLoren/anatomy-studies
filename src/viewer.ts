@@ -10,6 +10,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { attachTrackball } from "./viewer/trackball";
 import { practiceView } from "./viewer/practiceView";
 import { focusPiece } from "./viewer/focusPiece";
+import { createMuscleFocus } from "./viewer/muscleFocus";
 import { createExercise } from "./viewer/exercise";
 import { createMarkers } from "./viewer/markers";
 import { createModelLoader } from "./viewer/model";
@@ -52,11 +53,7 @@ export function createViewer(
   fillLight.intensity = 1.5;
   fillLight.groundColor = new Color3(0.12, 0.12, 0.12);
 
-  const keyLight = new DirectionalLight(
-    "key",
-    new Vector3(-0.6, -1, -0.8),
-    scene,
-  );
+  const keyLight = new DirectionalLight("key", new Vector3(-0.6, -1, -0.8), scene);
 
   const lowerFill = new DirectionalLight(
     "lowerFill",
@@ -72,6 +69,7 @@ export function createViewer(
   const frameModel = () => frameCamera(camera, engine, radius, halfSize);
   const markers = createMarkers({ canvas, camera, engine, scene, onMarkers });
   const exercise = createExercise(scene, onBoneSelect);
+  const muscleFocus = createMuscleFocus(scene, camera, markers.muscleSurface);
 
   const setupExercise = () => {
     applyExerciseMuscleLayer(scene, exercise.value);
@@ -79,6 +77,7 @@ export function createViewer(
     markers.configure(exercise.value, radius);
     exercise.highlight();
     focusPiece(scene, camera, exercise.value);
+    muscleFocus.configure(exercise.value);
   };
 
   const loader = createModelLoader({
@@ -98,7 +97,9 @@ export function createViewer(
     setupExercise, getExercise: () => exercise.value,
   });
 
-  const resize = () => { engine.resize(); frameModel(); };
+  const resize = () => {
+    engine.resize(); frameModel(); muscleFocus.refresh(exercise.value);
+  };
 
   window.addEventListener("resize", resize);
   const resizeObserver = new ResizeObserver(resize);
@@ -121,11 +122,15 @@ export function createViewer(
   return {
     fps: () => Math.round(engine.getFps()), paint: exercise.paint,
     zoom: (factor) => zoomCamera(camera, factor),
+    focusNumber(number) {
+      muscleFocus.refresh({ ...exercise.value, highlight: exercise.value?.markers?.[number - 1] });
+    },
     exercise(value) {
       loader.arrangeExercise(value);
       exercise.set(value, setupExercise);
     },
     reset(view = "default") {
+      muscleFocus.cancel();
       if (!exercise.value) { exercise.clear(); exercise.paint(false); }
       Object.assign(camera, {
         inertialAlphaOffset: 0,
@@ -144,12 +149,13 @@ export function createViewer(
       practiceView(camera, scene, exercise.value);
       frameModel();
       setupExercise();
+      muscleFocus.refresh(exercise.value);
     },
     load(model) {
-      onBoneSelect(null); void loader.load(model, exercise.clear);
+      muscleFocus.cancel(); onBoneSelect(null); void loader.load(model, exercise.clear);
     },
     dispose() {
-      trackball.dispose();
+      muscleFocus.dispose(); trackball.dispose();
       loader.dispose();
       exercise.clear();
       window.removeEventListener("resize", resize);

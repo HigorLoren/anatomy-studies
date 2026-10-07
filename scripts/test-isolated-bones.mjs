@@ -26,6 +26,12 @@ async function loadModule(file) {
     outputText = outputText.replace('import { visibleSurfaceAnchor } from "./surfaceAnchor";',
       'const visibleSurfaceAnchor = globalThis.anatomyTestVisibleSurfaceAnchor;');
   }
+  if (outputText.includes('import { surfaceNumberRotation } from "./surfaceNumbers";')) {
+    const module = await loadModule("../src/viewer/surfaceNumbers.ts");
+    globalThis.anatomyTestSurfaceRotation = module.surfaceNumberRotation;
+    outputText = outputText.replace('import { surfaceNumberRotation } from "./surfaceNumbers";',
+      'const surfaceNumberRotation = globalThis.anatomyTestSurfaceRotation;');
+  }
   outputText = outputText.replace('import { materialKey } from "./bones";',
     'const materialKey = (name) => name.replace(/\\.\\d+$/, "");');
   outputText = outputText.replace(/from "(@babylonjs[^"\n]+)"/g,
@@ -479,6 +485,96 @@ test("numbers shrink to fit narrow exposed muscle faces", () => {
     pins.configure(["Supraspinatus"], 1);
     assert.equal(pins.surface("Supraspinatus").sizeScale, 0.4,
       "the number circle must fit the exposed surface instead of being cut off");
+  } finally {
+    scene.dispose(); engine.dispose();
+  }
+});
+
+const { createMuscleFocus } = await loadModule("../src/viewer/muscleFocus.ts");
+const { PointerEventTypes } = await import("@babylonjs/core/Events/pointerEvents.js");
+test("number selection smoothly centers all muscle heads and faces the fixed marker", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  const camera = new ArcRotateCamera("camera", Math.PI / 2, Math.PI / 2,
+    10, Vector3.Zero(), scene);
+  for (const x of [4, 6]) {
+    const head = CreateBox(`head-${x}`, { size: 2 }, scene);
+    head.position.x = x;
+    head.material = new PBRMaterial("Biceps brachii", scene);
+  }
+  const anchor = { point: new Vector3(4, 0, -1), normal: Vector3.Backward() };
+  const focus = createMuscleFocus(scene, camera, () => anchor);
+  const exercise = { muscleTarget: "Biceps brachii", highlight: "Biceps brachii" };
+  try {
+    focus.configure(exercise);
+    assert(camera.target.equalsWithEpsilon(Vector3.Zero()), "selection starts without a jump");
+    focus.update(275);
+    assert(Math.abs(camera.target.x - 2.5) < 0.001, "the view moves progressively");
+    focus.update(275);
+    assert(camera.target.equalsWithEpsilon(new Vector3(5, 0, 0)), "all muscle heads are framed");
+    camera.getViewMatrix(true);
+    assert(Vector3.Dot(camera.position.subtract(anchor.point), anchor.normal) > 0,
+      "the camera ends on the exposed side of the number");
+    assert(scene.meshes.every(mesh => mesh.isEnabled()), "neighboring anatomy is retained");
+    const radius = camera.radius;
+    camera.alpha += 0.4;
+    const manualAlpha = camera.alpha;
+    focus.configure({ ...exercise, highlightColor: "red" });
+    focus.update(1000);
+    assert.equal(camera.alpha, manualAlpha, "feedback changes do not undo manual rotation");
+    focus.refresh(exercise);
+    focus.update(550);
+    assert.notEqual(camera.alpha, manualAlpha, "selecting the number again refocuses it");
+    assert.equal(camera.radius, radius);
+  } finally {
+    focus.dispose(); scene.dispose(); engine.dispose();
+  }
+});
+
+test("manual dragging cancels muscle focus and bone questions keep their view", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  const camera = new ArcRotateCamera("camera", 0, Math.PI / 2, 10, Vector3.Zero(), scene);
+  const mesh = CreateBox("muscle", { size: 2 }, scene);
+  mesh.position.x = 4;
+  mesh.material = new PBRMaterial("Teres minor", scene);
+  const focus = createMuscleFocus(scene, camera,
+    () => ({ point: new Vector3(4, 0, 1), normal: Vector3.Forward() }));
+  try {
+    focus.configure({ muscleTarget: "Teres minor", highlight: "Teres minor" });
+    focus.update(100);
+    scene.onPointerObservable.notifyObservers({ type: PointerEventTypes.POINTERDOWN });
+    const stopped = camera.target.clone();
+    focus.update(1000);
+    assert(camera.target.equalsWithEpsilon(stopped), "touch/drag takes control immediately");
+    focus.configure({ highlight: "Teres minor", isolatedBones: ["humerus"] });
+    focus.update(1000);
+    assert(camera.target.equalsWithEpsilon(stopped), "bone questions do not activate muscle focus");
+  } finally {
+    focus.dispose(); scene.dispose(); engine.dispose();
+  }
+});
+
+const { createMuscleFlag } = await loadModule("../src/viewer/muscleFlag.ts");
+test("muscle naming uses a small flag pinned to the surface and disposes its resources", () => {
+  const engine = new NullEngine();
+  const scene = new Scene(engine);
+  try {
+    const anchor = new Vector3(2, 3, 4);
+    const clear = createMuscleFlag(scene, anchor, 10, Vector3.Right(), 0.2);
+    const root = scene.getTransformNodeByName("practice-muscle-flag");
+    assert(root.position.equalsWithEpsilon(anchor));
+    const pole = scene.getMeshByName("practice-flag-pole");
+    pole.computeWorldMatrix(true);
+    const center = pole.getBoundingInfo().boundingBox.centerWorld;
+    assert(center.x > anchor.x,
+      "the pole extends outward from the marked muscle face");
+    assert(pole.getBoundingInfo().boundingBox.extendSizeWorld.length() < 0.02,
+      "flag size follows the muscle rather than the entire limb");
+    assert(scene.meshes.every(mesh => mesh.metadata.practiceMarker && !mesh.isPickable));
+    clear();
+    assert.equal(scene.meshes.length, 0);
+    assert.equal(scene.materials.length, 0);
   } finally {
     scene.dispose(); engine.dispose();
   }
