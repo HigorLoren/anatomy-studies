@@ -1,3 +1,4 @@
+import { anatomyReview } from "../../anatomyExplanations";
 import { answerIssue } from "../../answerIssue";
 import { classifyAnswer, explainAnswer, type Question } from "../../questions";
 
@@ -19,6 +20,7 @@ export function AnswerFeedback({
   const result = classifyAnswer(question, answer);
   const correct = result === "correct";
   const incomplete = result === "incomplete";
+  const review = correct ? [] : anatomyReview(question);
   const color = correct ? "border-emerald-200 bg-emerald-50 text-emerald-900"
     : incomplete ? "border-yellow-300 bg-yellow-50 text-yellow-900"
     : "border-red-300 bg-red-50 text-red-900";
@@ -45,6 +47,14 @@ export function AnswerFeedback({
         </p>
       )}
       {explanation && <p class="mt-2 mb-0">{explanation}</p>}
+      {review.length > 0 && <section class="mt-4 rounded-lg border border-current/15 bg-white/70 p-4"
+        aria-label="Explicação anatômica">
+        <h3 class="mb-3 font-semibold">Entenda a anatomia</h3>
+        {review.map(topic => <div key={topic.title} class="mt-3 first:mt-0">
+          <h4 class="font-semibold">{topic.title}</h4>
+          <p class="mt-1 mb-0">{topic.text}</p>
+        </div>)}
+      </section>}
     </div>
   );
 }
