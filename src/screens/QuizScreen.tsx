@@ -36,7 +36,7 @@ function getExercise(
   correct: boolean,
 ): Exercise {
   if (question.kind === "name") return {
-    highlight: question.isolatedBones?.length === 1 ? undefined : question.highlight,
+    clayTarget: question.highlight,
     isolatedBones: question.isolatedBones,
   };
 
@@ -85,10 +85,10 @@ export function QuizScreen(props: QuizScreenProps) {
           <span>{questionKinds[question.kind]}</span>
         </div>
         <ProgressBar current={index} total={total} />
-        {question.kind === "name" && exercise?.highlight && (
+        {question.kind === "name" && exercise?.clayTarget && (
           <p class="mb-3 flex items-center gap-2 text-xs text-muted">
             <span class="h-3 w-3 shrink-0 rounded-sm border-2 border-blue-500" aria-hidden="true" />
-            O contorno azul indica a estrutura a nomear.
+            A massinha azul indica a estrutura a nomear.
           </p>
         )}
         {!hasAnswerBlanks(question) && <>

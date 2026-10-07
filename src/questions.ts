@@ -175,7 +175,7 @@ export const QUESTION_BANK: Question[] = [...rawQuestions.map<Question>((questio
   id: `question-${index + 1}`,
   category: question.model?.startsWith("spine-") ? "spine"
     : question.model === "thorax-practice" ? "thorax" : "skull",
-})), ...SIMULADO_PART_1, ...SIMULADO_PART_2, ...SIMULADO_PART_3];
+})), ...SIMULADO_PART_1, ...SIMULADO_PART_2, ...SIMULADO_PART_3].map(practicalQuestion);
 
 export type TestConfig = {
   category: Category | "all";
@@ -269,4 +269,14 @@ function muscleListParts(answer: string, sourceNumber?: number) {
   if (plural) value = value.replace(/^musculos /, "");
   const parts = value.split(/\s*(?:;|,|\be\b)\s*/i).filter(Boolean);
   return plural ? parts.map((part) => `musculo ${part}`) : parts;
+}
+
+function practicalQuestion(question: Question): Question {
+  if (question.kind !== "name" || !question.highlight) return question;
+  return {
+    ...question,
+    title: "Denomine a estrutura marcada.",
+    instruction: "Gire a peça e identifique a estrutura indicada pela massinha azul.",
+    explanation: question.explanation || question.title,
+  };
 }

@@ -7,6 +7,7 @@ import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Scene } from "@babylonjs/core/scene";
+import { practiceView } from "./viewer/practiceView";
 import { focusPiece } from "./viewer/focusPiece";
 import { createExercise } from "./viewer/exercise";
 import { createMarkers } from "./viewer/markers";
@@ -26,7 +27,7 @@ export type {
 } from "./viewer/types";
 
 const SCENE_COLOR = new Color4(0.04, 0.05, 0.08, 1);
-const CAMERA_FRAME_PADDING = 0.9;
+const CAMERA_FRAME_PADDING = 1.15;
 
 export function createViewer(
   canvas: HTMLCanvasElement,
@@ -35,10 +36,7 @@ export function createViewer(
   onMarkers: (markers: Marker[]) => void = () => {},
   onNumberSelect: (number: number) => void = () => {},
 ): Viewer {
-  const engine = new Engine(canvas, true, {
-    adaptToDeviceRatio: true,
-    limitDeviceRatio: 2,
-  });
+  const engine = new Engine(canvas, true, { adaptToDeviceRatio: true, limitDeviceRatio: 2 });
 
   const scene = new Scene(engine);
   scene.clearColor = SCENE_COLOR;
@@ -74,18 +72,7 @@ export function createViewer(
   let center = Vector3.Zero();
   let radius = 0;
 
-  const frameModel = () => {
-    if (!radius) return;
-
-    const vertical = camera.fov / 2;
-    const horizontal = Math.atan(
-      Math.tan(vertical) * engine.getAspectRatio(camera),
-    );
-
-    camera.radius =
-      (radius / Math.sin(Math.min(vertical, horizontal))) *
-      CAMERA_FRAME_PADDING;
-  };
+  const frameModel = () => frameCamera(camera, engine, radius);
   const markers = createMarkers({ canvas, camera, engine, scene, onMarkers });
   const exercise = createExercise(scene, onBoneSelect);
 
@@ -104,6 +91,7 @@ export function createViewer(
     setModel: (nextCenter, nextRadius) => {
       center = nextCenter;
       radius = nextRadius;
+      camera.upVector = Vector3.Up();
       camera.setTarget(center.clone());
     },
     setStatus,
@@ -145,12 +133,15 @@ export function createViewer(
         inertialPanningX: 0,
         inertialPanningY: 0,
       });
+      camera.upVector = Vector3.Up();
       camera.setTarget(center.clone());
       camera.alpha = view === "question" || loader.isolatedCount > 1 ? Math.PI / 2 : Math.PI / 2.9;
       camera.beta = loader.isolatedCount > 1
         ? 0.01
         : exercise.value?.isolatedBones ? Math.PI / 4 : Math.PI / 1.8;
       frameModel();
+      practiceView(camera, scene, exercise.value);
+      setupExercise();
     },
     load(model) {
       onBoneSelect(null); void loader.load(model, exercise.clear);
@@ -163,4 +154,11 @@ export function createViewer(
       engine.dispose();
     },
   };
+}
+
+function frameCamera(camera: ArcRotateCamera, engine: Engine, radius: number) {
+  if (!radius) return;
+  const vertical = camera.fov / 2;
+  const horizontal = Math.atan(Math.tan(vertical) * engine.getAspectRatio(camera));
+  camera.radius = radius / Math.sin(Math.min(vertical, horizontal)) * CAMERA_FRAME_PADDING;
 }

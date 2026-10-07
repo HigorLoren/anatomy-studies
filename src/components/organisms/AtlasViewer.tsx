@@ -15,7 +15,7 @@ import { MarkerButtons } from "./atlas/MarkerButtons";
 import { ViewerControls } from "./atlas/ViewerControls";
 import { ViewerLoader } from "./atlas/ViewerLoader";
 
-type AtlasViewerProps = {
+export type AtlasViewerProps = {
   mode: "explore" | "quiz";
   model: ModelId;
   onModelChange?: (model: ModelId) => void;
@@ -91,7 +91,7 @@ export function AtlasViewer({
     [mode, questionIndex],
   );
 
-  const modelLabel = model.startsWith("spine-") ? "Peças da coluna vertebral" : model === "thorax-practice" ? "Ossos do tórax" : model === "exploded-skull" ? "Crânio explodido" : "Crânio humano";
+  const modelLabel = viewerLabel(mode, model);
 
   const reset = () => {
     setPainting(false);
@@ -137,4 +137,11 @@ export function AtlasViewer({
       <ViewerControls mode={mode} onReset={reset} />
     </section>
   );
+}
+
+function viewerLabel(mode: "explore" | "quiz", model: ModelId) {
+  if (mode === "quiz") return "Peça anatômica";
+  if (model.startsWith("spine-")) return "Peças da coluna vertebral";
+  if (model === "thorax-practice") return "Ossos do tórax";
+  return model === "exploded-skull" ? "Crânio explodido" : "Crânio humano";
 }

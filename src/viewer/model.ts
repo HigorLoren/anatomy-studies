@@ -8,6 +8,7 @@ import type { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 import type { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import type { Node } from "@babylonjs/core/node";
 import type { Scene } from "@babylonjs/core/scene";
+import { practiceView } from "./practiceView";
 import { createVertebraAppearance } from "./vertebraAppearance";
 import { createPaintMaterials } from "./paintMaterials";
 import { mirrorRightGroups } from "./mirrorRightGroups";
@@ -131,7 +132,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   } = options;
 
   const geometry = scene.meshes.filter((mesh) =>
-    mesh.getTotalVertices() > 0 && mesh.isEnabled(),
+    mesh.getTotalVertices() > 0 && mesh.isEnabled() && !mesh.metadata?.practiceMarker,
   );
 
   if (!geometry.length) {
@@ -143,8 +144,9 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   fill.intensity = natural ? 0.8 : 1;
   key.intensity = natural ? 1.5 : 0.2;
 
-  setModel(min.add(max).scale(0.505), radius);
+  setModel(min.add(max).scale(0.5), radius);
 
+  camera.upVector = Vector3.Up();
   camera.alpha = exercise ? Math.PI / 2 : Math.PI / 2.9;
   camera.beta = separatedGroup(exercise)
     ? 0.01
@@ -157,6 +159,7 @@ function configure(options: Options, natural: boolean, exercise: Exercise) {
   camera.panningSensibility = 2000 / radius;
 
   frame();
+  practiceView(camera, scene, exercise);
 }
 
 function bounds(meshes: Scene["meshes"]) {

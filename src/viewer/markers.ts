@@ -3,6 +3,8 @@ import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import type { Engine } from "@babylonjs/core/Engines/engine";
 import type { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 import type { Scene } from "@babylonjs/core/scene";
+import { visibleSurfaceAnchor } from "./surfaceAnchor";
+import { createClayMarker } from "./clayMarker";
 import { materialKey } from "./bones";
 import type { Exercise, Marker } from "./types";
 
@@ -23,11 +25,14 @@ export function createMarkers({
 }: Options) {
   const anchors = new Map<string, Vector3>();
   let signature = "";
+  let clearClay: (() => void) | undefined;
 
   const configure = (exercise: Exercise, modelRadius: number) => {
+    clearClay?.();
+    clearClay = undefined;
     anchors.clear();
 
-    for (const name of exercise?.markers ?? []) {
+    for (const name of markerTargets(exercise)) {
       const matches = scene.meshes.filter(
         (item) =>
           item.isEnabled() &&
@@ -41,7 +46,15 @@ export function createMarkers({
 
       const anchor = mesh && findSurfaceAnchor(scene, mesh, name, modelRadius);
 
-      if (anchor) anchors.set(name, anchor);
+      if (anchor) {
+        anchors.set(name, anchor);
+        if (name === exercise?.clayTarget) {
+          const surface = visibleSurfaceAnchor(scene, mesh!, camera);
+          if (surface) {
+            clearClay = createClayMarker(scene, surface.point, modelRadius, surface.normal);
+          }
+        }
+      }
     }
   };
 
@@ -145,4 +158,8 @@ function markerSize(
     (canvas.clientHeight * radius * 0.09) /
     (2 * camera.radius * Math.tan(camera.fov / 2));
   return Math.round(Math.max(12, Math.min(28, projected)) * 2) / 2;
+}
+
+function markerTargets(exercise: Exercise) {
+  return exercise?.clayTarget ? [exercise.clayTarget] : exercise?.markers ?? [];
 }
