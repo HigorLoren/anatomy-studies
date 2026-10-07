@@ -1,3 +1,4 @@
+import { answerIssue } from "../../answerIssue";
 import { classifyAnswer, explainAnswer, type Question } from "../../questions";
 
 type AnswerFeedbackProps = {
@@ -13,6 +14,8 @@ export function AnswerFeedback({
 }: AnswerFeedbackProps) {
   if (!checked) return null;
 
+  const reason = answerIssue(question, answer);
+  const explanation = explainAnswer(question, answer);
   const result = classifyAnswer(question, answer);
   const correct = result === "correct";
   const incomplete = result === "incomplete";
@@ -32,20 +35,22 @@ export function AnswerFeedback({
         >
           {correct ? "✓" : incomplete ? "!" : "×"}
         </span>
-        {correct ? "Resposta correta!" : incomplete ? "Quase certo: nome incompleto" : "Resposta incorreta"}
+        {feedbackTitle(answer, result)}
       </strong>
-      {incomplete && (
-        <p class="mt-2 mb-0">
-          Você identificou a estrutura, mas precisa escrever o nome completo.
-          Esta resposta não conta como acerto.
-        </p>
-      )}
+      {reason && <p class="mt-2 mb-0">{reason}</p>}
+      {incomplete && <p class="mt-2 mb-0">Esta resposta não conta como acerto.</p>}
       {!correct && (
         <p class="mt-2 mb-0">
           Resposta correta: <b>{question.answer}</b>
         </p>
       )}
-      <p class="mt-2 mb-0">{explainAnswer(question, answer)}</p>
+      {explanation && <p class="mt-2 mb-0">{explanation}</p>}
     </div>
   );
+}
+
+function feedbackTitle(answer: string, result: string) {
+  if (!answer) return "Resposta não informada";
+  if (result === "correct") return "Resposta correta!";
+  return result === "incomplete" ? "Quase certo: nome incompleto" : "Resposta incorreta";
 }
