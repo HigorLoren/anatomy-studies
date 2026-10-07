@@ -148,7 +148,7 @@ Anatomia humana do aparelho locomotor (sistemas esquelético, articular e muscul
 82. Lobo Occipital
 83. Polo Frontal
 84. Polo Temporal
-85. Polo Occipital
+85. Lobo Occipital (repetido no roteiro original)
 
 ## Nervos do membro superior
 
@@ -162,3 +162,11 @@ Anatomia humana do aparelho locomotor (sistemas esquelético, articular e muscul
 90. Nervo Isquiático
 91. Nervo Tibial
 92. Nervo Fibular Comum
+
+## Referência ao professor
+
+Este catálogo segue o Roteiro Unificado de Aula Prática — Avaliação (P1), 2026-2.
+O item 85 do PDF repete “Lobo Occipital”, já listado no item 82. A repetição foi
+preservada; o documento não apresenta “Polo Occipital” nesse item.
+As grafias “Aracnoide” e “Oblíquo” foram regularizadas sem mudar as estruturas.
+A cobertura do banco e os critérios de correção estão em `validacao-p1.md`.

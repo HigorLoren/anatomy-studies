@@ -4,6 +4,10 @@ import { test } from "node:test";
 import ts from "typescript";
 
 let source = readFileSync(new URL("../src/questions.ts", import.meta.url), "utf8");
+source = source.replace('import { alignProfessorQuestion } from "./professorContent";',
+  readFileSync(new URL("../src/professorContent.ts", import.meta.url), "utf8"));
+source = source.replace('import { P1_COMPLEMENT } from "./p1Questions";',
+  readFileSync(new URL("../src/p1Questions.ts", import.meta.url), "utf8"));
 source = source.replace('import { createMuscleQuestions, muscleNamingQuestion } from "./muscles";',
   readFileSync(new URL("../src/muscles.ts", import.meta.url), "utf8"));
 for (let part = 1; part <= 3; part++) {
@@ -23,12 +27,13 @@ source += readFileSync(new URL("../src/viewer/bones.ts", import.meta.url), "utf8
   .replace(/^import.*$/gm, "");
 source += readFileSync(new URL("../src/exploration.ts", import.meta.url), "utf8")
   .replace(/^import.*$/gm, "");
+source += readFileSync(new URL("../src/anatomyExplanations.ts", import.meta.url), "utf8");
 const { outputText } = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 });
 const { QUESTION_BANK, classifyAnswer, isCorrect, practicalHintBones, allBlanksFilled, answerIssue,
   MUSCLES, MUSCLE_DISTRACTORS, muscleExposure, questionMuscleTarget,
-  filterQuestions, createTest, recordAnswer, testPool, restoreLearning, points, formatPoints, MODELS, EXPLORATION_VIEWS, preparedMuscleFile } = await import(
+  filterQuestions, createTest, recordAnswer, testPool, restoreLearning, points, formatPoints, MODELS, EXPLORATION_VIEWS, preparedMuscleFile, boneSelection, P1_COMPLEMENT, anatomyReview } = await import(
   `data:text/javascript;base64,${Buffer.from(outputText).toString("base64")}`
 );
 const named = (highlight) => QUESTION_BANK.find(
@@ -130,8 +135,8 @@ test("identification has at least five alternatives and preserves its answer aft
 const simulated = (number) => QUESTION_BANK.find((question) => question.sourceNumber === number);
 
 test("the imported simulation contains all 70 questions with unique IDs", () => {
-  assert.equal(QUESTION_BANK.length, 115);
-  assert.equal(new Set(QUESTION_BANK.map((question) => question.id)).size, 115);
+  assert.equal(QUESTION_BANK.length, 115 + P1_COMPLEMENT.length);
+  assert.equal(new Set(QUESTION_BANK.map((question) => question.id)).size, QUESTION_BANK.length);
   for (let number = 1; number <= 70; number++) assert(simulated(number));
 });
 
@@ -223,9 +228,9 @@ test("rotator cuff list accepts a plural prefix or individual singular prefixes"
   assert.equal(classifyAnswer(question,
     "Músculos subescapular; redondo menor; infraespinal; supraespinal"), "correct");
   assert.equal(classifyAnswer(question,
-    "supraespinal; infraespinal; redondo menor; subescapular"), "incorrect");
+    "supraespinal; infraespinal; redondo menor; subescapular"), "incomplete");
   assert.equal(classifyAnswer(question,
-    "m. supraespinal, infraespinal, redondo menor e subescapular"), "incorrect");
+    "m. supraespinal, infraespinal, redondo menor e subescapular"), "incomplete");
 });
 
 test("practical naming hides descriptive clues and isolates imported bones", () => {
@@ -351,10 +356,10 @@ test("tests combine regions and kinds, reject empty selections, and cap actual q
   assert.equal(createTest(config).length, 20);
   assert.equal(new Set(createTest(config).map(q => q.id)).size, 20);
   const small = { categories: ["abdomen"], kinds: ["name"], count: 20 };
-  assert.equal(createTest(small).length, 1);
+  assert.equal(createTest(small).length, filterQuestions(small).length);
   assert.equal(points(20), 0.5);
   assert.equal(points(5), 2);
-  assert.equal(points(createTest(small).length), 10);
+  assert.equal(points(createTest(small).length) * createTest(small).length, 10);
   assert.equal(formatPoints(3 * points(3)), "10");
 });
 
@@ -452,4 +457,116 @@ test("tests allow more than 20 questions and preserve large saved sessions", () 
   assert.equal(saved.config.count, 35);
   assert.equal(restoreLearning(null, QUESTION_BANK).config.count, 20);
   assert.equal(formatPoints(30 * points(30)), "10");
+});
+
+test("professor and atlas names are accepted without relaxing anatomical distinctions", () => {
+  for (const [key, answers] of [
+    ["Atlas", ["1ª Vértebra Cervical C1 (Atlas)", "primeira vértebra cervical (atlas)"]],
+    ["Axis", ["2ª Vértebra Cervical C2 (Áxis)"]],
+    ["Vertebra_C7", ["7ª Vértebra Cervical C7 (Proeminente)"]],
+    ["sacrum", ["Vértebras sacrais", "(Osso Sacro) Vértebras Sacrais"]],
+    ["Coccyx", ["Vértebras coccígeas", "(Osso Cóccix) Vértebras Coccígeas"]],
+  ]) {
+    for (const question of QUESTION_BANK.filter(q => q.kind === "name" && q.highlight === key)) {
+      for (const answer of answers) assert.equal(classifyAnswer(question, answer), "correct", question.id);
+      assert.equal(classifyAnswer(question, boneSelection(key, key).name), "correct", question.id);
+    }
+  }
+  assert.equal(classifyAnswer(simulated(19), "sutura interparietal"), "correct");
+  assert.equal(classifyAnswer(simulated(20), "sutura frontoparietal"), "correct");
+  assert.equal(classifyAnswer(simulated(19), "sutura frontoparietal"), "incorrect");
+  assert.equal(classifyAnswer(simulated(42),
+    "1ª vértebra cervical C1 (atlas); 2ª vértebra cervical C2 (áxis)"), "correct");
+  assert.equal(classifyAnswer(simulated(42), "atlas; áxis"), "incomplete");
+  assert.equal(classifyAnswer(simulated(42), "áxis; atlas"), "incorrect");
+});
+
+test("short names receive consistent feedback in original and simulated questions", () => {
+  for (const [highlight, number, answer] of [["Mandible bone", 5, "mandíbula"],
+    ["Vertebra_C7", 9, "C7"]]) {
+    assert.equal(classifyAnswer(named(highlight), answer), "incomplete");
+    assert.equal(classifyAnswer(simulated(number), answer), "incomplete");
+    assert.equal(classifyAnswer(named(highlight), simulated(number).answer), "correct");
+  }
+  for (const number of [25, 26, 27, 28, 29, 30, 68]) {
+    const question = simulated(number);
+    const short = question.answer.replace(/^músculo /i, "");
+    assert.equal(classifyAnswer(question, short), "incomplete", question.id);
+    assert.equal(classifyAnswer(question, `m. ${short}`), "correct", question.id);
+  }
+});
+
+test("P1 complement covers missing items and preserves full list order and distinct components", () => {
+  const covered = new Set(QUESTION_BANK.flatMap(question => question.p1Items ?? []));
+  for (let item = 1; item <= 92; item++) assert(covered.has(item), `P1 item ${item}`);
+  const find = id => QUESTION_BANK.find(question => question.id === id);
+  for (const item of [34, 35, 36, 37, 46, 51, 52, 53, 58, 65, 69, 71, 75, 76, 77, 80, 81, 83, 84]) {
+    assert(find(`p1-${item}`), item);
+  }
+  assert.equal(classifyAnswer(find("p1-26-componentes"), "púbis; ílio; ísquio"), "correct");
+  assert.equal(classifyAnswer(find("p1-26-componentes"), "ílio; ílio; púbis"), "incorrect");
+  assert.equal(classifyAnswer(find("p1-86-nervos"), "nervo ulnar; nervo radial; nervo mediano"), "correct");
+  assert.equal(classifyAnswer(find("p1-86-nervos"), "ulnar; radial; mediano"), "incomplete");
+  assert.equal(classifyAnswer(find("p1-86-nervos"), "nervo ulnar; nervo radial; nervo tibial"), "incorrect");
+  assert.equal(classifyAnswer(find("p1-89-nervos"), "nervo tibial; nervo femoral; nervo fibular comum; nervo isquiático"), "correct");
+  assert.equal(classifyAnswer(find("p1-89-nervos"), "tibial; femoral; fibular comum; isquiático"), "incomplete");
+  assert.equal(classifyAnswer(find("p1-70-meninges"), "pia-máter; aracnoide"), "correct");
+  assert.equal(classifyAnswer(find("p1-10-partes"), "corpo do esterno; processo xifoide; manúbrio do esterno"), "correct");
+});
+
+test("atlas identifies teeth, costal cartilage and shared-material muscles using real GLB nodes", () => {
+  for (const [file, cases] of [
+    ["overview-skull-natural", [["Lower canine.r", "Dente Canino Inferior"], ["Upper first molar tooth.r", "Dente Primeiro Molar Superior"]]],
+    ["upper-muscles-uncovered-base", [["Deltoid muscle.r", "Músculo deltoide"],
+      ["Art cart of radius head​.r", "Cartilagem articular"], ["Pectoralis major.r", "Músculo peitoral maior"]]],
+    ["lower-muscles-prepared", [["Gluteus maximus muscle.r", "Músculo glúteo máximo"],
+      ["Art cart of patella.r", "Cartilagem articular"]]],
+    ["pectoral-back-thorax-bones-costal-cart", [["Costal cart of 1st rib.r", "Cartilagem costal"],
+      ["Costal cart of 1st rib.l", "Cartilagem costal"]]],
+  ]) {
+    const bytes = readFileSync(new URL(`../public/${file}.glb`, import.meta.url));
+    const glb = JSON.parse(bytes.subarray(20, 20 + bytes.readUInt32LE(12)));
+    for (const [target, expected] of cases) {
+      const node = glb.nodes.find(node => node.name === target && node.mesh !== undefined)
+        ?? glb.nodes.find(node => glb.meshes[node.mesh]?.primitives.some(primitive =>
+          glb.materials[primitive.material]?.name === target));
+      assert(node, `${file}: ${target}`);
+      const material = glb.materials[glb.meshes[node.mesh].primitives[0].material].name;
+      // Babylon may put the anatomical name on the parent of a primitive mesh.
+      assert.equal(boneSelection(material, "primitive", ["primitive", node.name]).name, expected);
+    }
+  }
+  assert.equal(boneSelection("Muscle basic", "unmapped muscle").name, "Músculo (nome não identificado)");
+  assert.equal(boneSelection("Articular cartilage", "generic cartilage").name, "Cartilagem articular");
+});
+
+
+test("anatomical review covers every question and every P1 item", () => {
+  for (const question of QUESTION_BANK) {
+    const notes = anatomyReview(question);
+    assert.ok(notes.length > 0, question.id);
+    assert.ok(notes.length <= 2, `${question.id}: keep error feedback concise`);
+    for (const note of notes) {
+      assert.ok(note.title && note.text.length > 100, question.id);
+      assert.equal("source" in note, false);
+      assert.doesNotMatch(`${note.title} ${note.text}`, /Base:|aula|professor|roteiro|2026|P1/i);
+    }
+  }
+  for (let item = 1; item <= 92; item++) {
+    assert.ok(anatomyReview({ p1Items: [item] }).length > 0, `P1 item ${item}`);
+  }
+  assert.deepEqual(anatomyReview({}), []);
+});
+
+test("reviews consolidate sets and retain anatomical distinctions", () => {
+  const review = id => anatomyReview(QUESTION_BANK.find(question => question.id === id));
+  assert.equal(review("simulado-31").length, 1);
+  assert.match(review("simulado-31")[0].text, /Deltoide e redondo maior não/);
+  assert.equal(review("simulado-34").length, 1);
+  assert.match(review("simulado-34")[0].text, /profundo ao reto femoral/);
+  assert.equal(review("simulado-61").length, 1);
+  assert.match(review("simulado-61")[0].text, /C1.*C2/);
+  assert.match(review("simulado-63")[0].text, /rádio fica lateralmente.*ulna fica medialmente/);
+  assert.match(review("simulado-69")[0].text, /dois ramos terminais/);
+  assert.equal(anatomyReview({p1Items: [82, 85, 82]}).length, 1);
 });

@@ -1,3 +1,5 @@
+import { alignProfessorQuestion } from "./professorContent";
+import { P1_COMPLEMENT } from "./p1Questions";
 import { SIMULADO_PART_1 } from "./simuladoPart1";
 import { SIMULADO_PART_2 } from "./simuladoPart2";
 import { SIMULADO_PART_3 } from "./simuladoPart3";
@@ -36,6 +38,9 @@ export type Question = {
   kind: "identify" | "name" | "complete" | "compare";
   sourceNumber?: number;
   answerGroups?: string[][];
+  incompleteAnswerGroups?: string[][];
+  unorderedGroups?: boolean;
+  p1Items?: number[];
   title: string;
   instruction: string;
   answer: string;
@@ -53,6 +58,7 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
   {
     kind: "identify",
     title: "Qual número indica o osso frontal?",
+    p1Items: [1],
     instruction:
       "Observe os cinco pontos no crânio e selecione o número correspondente.",
     answer: "1",
@@ -63,6 +69,7 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
   {
     kind: "identify",
     title: "Qual número indica o osso zigomático?",
+    p1Items: [8],
     instruction:
       "Gire o modelo se precisar. Os números acompanham as estruturas.",
     answer: "3",
@@ -94,11 +101,12 @@ const rawQuestions: Omit<Question, "id" | "category">[] = [
   {
     kind: "complete",
     title: "Os ossos frontal, parietal, temporal e occipital pertencem ao ____.",
+    p1Items: [1, 2, 3, 4],
     instruction: "Preencha a lacuna com o nome da divisão do crânio.",
     answer: "Neurocrânio",
     accepted: ["neurocrânio"],
     explanation:
-      "No catálogo, os ossos frontal, parietal, temporal e occipital estão agrupados no neurocrânio.",
+      "Os ossos frontal, parietal, temporal e occipital pertencem ao neurocrânio.",
   },
 ];
 
@@ -177,7 +185,8 @@ export const QUESTION_BANK: Question[] = [...rawQuestions.map<Question>((questio
   category: question.model?.startsWith("spine-") ? "spine"
     : question.model === "thorax-practice" ? "thorax" : "skull",
 })), ...SIMULADO_PART_1, ...SIMULADO_PART_2, ...SIMULADO_PART_3,
-...createMuscleQuestions()].map(muscleNamingQuestion).map(practicalQuestion);
+...createMuscleQuestions(), ...P1_COMPLEMENT].map(muscleNamingQuestion)
+  .map(alignProfessorQuestion).map(practicalQuestion);
 
 export type TestConfig = {
   category?: Category | "all";
@@ -229,18 +238,14 @@ export function classifyAnswer(question: Question, answer: string): AnswerStatus
   if (question.answerGroups) {
     const parts = muscleListParts(answer, question.sourceNumber);
     const groups = question.answerGroups;
-    const remaining = [...parts];
-    const unordered = [31, 38, 40, 44, 45, 69].includes(question.sourceNumber ?? 0);
-    const valid = parts.length === groups.length && groups.every((group, index) => {
-      if (!unordered) return group.some((term) => normalizeAnswer(term) === parts[index]);
-      const found = remaining.findIndex((part) =>
-        group.some((term) => normalizeAnswer(term) === part),
-      );
-      if (found < 0) return false;
-      remaining.splice(found, 1);
-      return true;
-    });
-    if (valid) return "correct";
+    const unordered = question.unorderedGroups
+      ?? [31, 38, 40, 44, 45, 69].includes(question.sourceNumber ?? 0);
+    if (matchesAnswerGroups(parts, groups, unordered)) return "correct";
+    if (question.incompleteAnswerGroups) {
+      const completeOrShort = groups.map((group, index) =>
+        [...group, ...(question.incompleteAnswerGroups?.[index] ?? [])]);
+      if (matchesAnswerGroups(parts, completeOrShort, unordered)) return "incomplete";
+    }
   }
   if (matches([question.answer, ...question.accepted])) return "correct";
   if (question.kind !== "identify" && matches(question.incompleteAccepted ?? [])) {
@@ -288,4 +293,16 @@ function practicalQuestion(question: Question): Question {
       : "Gire a peça e identifique a estrutura indicada pela massinha azul.",
     explanation: question.explanation || question.title,
   };
+}
+
+function matchesAnswerGroups(parts: string[], groups: string[][], unordered: boolean) {
+  if (parts.length !== groups.length) return false;
+  const remaining = [...parts];
+  return groups.every((group, index) => {
+    if (!unordered) return group.some(term => normalizeAnswer(term) === parts[index]);
+    const found = remaining.findIndex(part => group.some(term => normalizeAnswer(term) === part));
+    if (found < 0) return false;
+    remaining.splice(found, 1);
+    return true;
+  });
 }

@@ -145,9 +145,9 @@ export const SIMULADO_PART_3: Question[] = [
   },
   {
     "id": "simulado-67", "sourceNumber": 67, "category": "lower", "kind": "compare",
-    "title": "Qual estrutura é chamada de “tendão calcâneo”?",
-    "instruction": "Responda com o termo anatômico.", "answer": "Tendão de Aquiles", "accepted": [
-      "tendão calcâneo", "tendão do tríceps sural"
+    "title": "Como se chama o tendão comum dos músculos gastrocnêmio e sóleo, inserido no calcâneo?",
+    "instruction": "Responda com o termo anatômico.", "answer": "Tendão do calcâneo", "accepted": [
+      "tendão calcâneo", "tendão de Aquiles", "tendão do tríceps sural"
     ], "explanation": ""
   },
   {
@@ -163,8 +163,7 @@ export const SIMULADO_PART_3: Question[] = [
     "instruction": "Preencha cada lacuna com um termo anatômico.",
     "answer": "Nervo tibial; nervo fibular comum", "accepted": [],
     "explanation":
-    "O nervo isquiático se divide nos nervos tibial e fibular comum. O " +
-    "enunciado original era ambíguo; aqui são pedidos os dois ramos.",
+    "O nervo isquiático se divide nos nervos tibial e fibular comum.",
     "answerGroups": [
       [
         "nervo tibial", "tibial"

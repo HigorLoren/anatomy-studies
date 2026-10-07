@@ -221,9 +221,9 @@ export const SIMULADO_PART_2: Question[] = [
   },
   {
     "id": "simulado-48", "sourceNumber": 48, "category": "nervous", "kind": "complete",
-    "title": "Os lobos cerebrais relacionados no roteiro são frontal, parietal, temporal e ____.",
+    "title": "Os lobos cerebrais relacionados no roteiro unificado da P1 são frontal, parietal, temporal e ____.",
     "instruction": "Responda com o termo anatômico.", "answer": "Occipital", "accepted": [
       "lobo occipital"
-    ], "explanation": ""
+    ], "explanation": "Frontal, parietal, temporal e occipital são lobos cerebrais. A ínsula também é um lobo; essa lista de quatro nomes não reúne todos os lobos cerebrais."
   }
 ];

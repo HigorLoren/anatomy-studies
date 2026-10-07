@@ -38,7 +38,7 @@ export const SIMULADO_PART_1: Question[] = [
   },
   {
     "id": "simulado-5", "sourceNumber": 5, "category": "skull", "kind": "name",
-    "title": "Principal osso da mandíbula, localizado na parte inferior da face.",
+    "title": "Osso da face que forma a mandíbula e se articula com os ossos temporais.",
     "instruction": "Observe a estrutura no modelo 3D e responda com seu nome anatômico.",
     "answer": "Mandíbula", "accepted": [
       "osso mandíbula", "osso mandibular"
@@ -170,13 +170,13 @@ export const SIMULADO_PART_1: Question[] = [
   {
     "id": "simulado-19", "sourceNumber": 19, "category": "skull", "kind": "name",
     "title": "Articulação fibrosa entre os dois ossos parietais.",
-    "instruction": "Responda com o termo anatômico.", "answer": "Sutura sagital", "accepted": [],
+    "instruction": "Responda com o termo anatômico.", "answer": "Sutura sagital", "accepted": ["sutura interparietal"],
     "explanation": ""
   },
   {
     "id": "simulado-20", "sourceNumber": 20, "category": "skull", "kind": "name",
     "title": "Articulação fibrosa entre o osso frontal e os ossos parietais.",
-    "instruction": "Responda com o termo anatômico.", "answer": "Sutura coronal", "accepted": [],
+    "instruction": "Responda com o termo anatômico.", "answer": "Sutura coronal", "accepted": ["sutura frontoparietal"],
     "explanation": ""
   },
   {

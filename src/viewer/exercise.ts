@@ -70,7 +70,11 @@ export function createExercise(
 
 function structureSelection(mesh: AbstractMesh) {
   const material = mesh.material!.name;
-  const selection = boneSelection(material, mesh.name);
+  const names: string[] = [];
+  for (let node: typeof mesh | AbstractMesh["parent"] = mesh; node; node = node.parent) {
+    names.push(node.name);
+  }
+  const selection = boneSelection(material, mesh.name, names);
   const muscle = [...MUSCLES, ...MUSCLE_DISTRACTORS].find(
     item => item.key === materialKey(material),
   );
